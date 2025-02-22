@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='update_profile.css') }}">
+</head>
+<body>
+
+    <div class="profile-container">
+        <h2>Your Profile</h2>
+        <p><strong>Name:</strong> {{ user[0] }}</p>
+        <p><strong>Phone:</strong> {{ user[1] }}</p>
+        <p><strong>Email:</strong> {{ user[2] }}</p>
+        <p><strong>Position:</strong> {{ user[3] }}</p>
+        <p><strong>State:</strong> {{ user[4] }}</p>
+        <p><strong>District:</strong> {{ user[5] }}</p>
+        
+        <div class="button-container">
+            <a href="/edit_profile" class="edit-button">Edit Profile</a>
+            <button class="logout-button" onclick="window.location.href='/police/logout'">Logout</button>
+            <a href="/police/home" class="logout-button">Home</a>
+        </div>
+    </div>
+
+</body>
+</html>

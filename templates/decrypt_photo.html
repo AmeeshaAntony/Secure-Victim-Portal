@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decrypt Photo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='case_details.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Case File: {{ case[1] }}</h2>
+        <h3>Victim's Photo</h3>
+
+        {% if not decrypted %}
+            <form method="POST">
+                <label for="secret_key">Enter Secret Key:</label>
+                <input type="password" name="secret_key" required>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        {% else %}
+            <img src="{{ url_for('static', filename=case[7].replace('\\', '/').replace('static/', '')) }}" alt="Decrypted Photo" width="300">
+        {% endif %}
+
+        <br><br>
+        <a href="{{ url_for('case_details', case_number=case[1]) }}" class="btn btn-secondary">Back</a>
+    </div>
+</body>
+</html>

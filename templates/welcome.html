@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='welcome.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="welcome-box">
+            <h2>Welcome to the Portal</h2>
+            <button onclick="window.location.href='/user'">User</button>
+            <button onclick="window.location.href='/admin'">Admin</button>
+            <button onclick="window.location.href='/police'">Local Police Officers</button>
+        </div>
+    </div>
+</body>
+</html>

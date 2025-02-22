@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Police Signup</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='police_signup.css') }}">
+</head>
+<body>
+
+    <div class="signup-container">
+        <h2>Police Officer Signup</h2>
+        <form action="{{ url_for('police_signup') }}" method="POST">
+            <input type="text" name="name" placeholder="Full Name" required>
+            <input type="password" name="password" placeholder="Enter Password" required>
+            <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+
+            <input type="text" id="phone" name="phone" placeholder="Phone Number" required>
+            <p id="phoneError" class="error-message"></p>
+
+            <input type="email" id="email" name="email" placeholder="Email ID (Username)" required>
+            <p id="emailError" class="error-message"></p>
+
+            <select name="state" id="state" required>
+                <option value="" disabled selected>Select State</option>
+                <option value="kerala">Kerala</option>
+                <option value="tamilnadu">Tamil Nadu</option>
+                <option value="karnataka">Karnataka</option>
+                <option value="goa">Goa</option>
+            </select>
+
+            <select name="district" id="district" required>
+                <option value="" disabled selected>Select District</option>
+                <option value="ernakulam">Ernakulam</option>
+                <option value="thrissur">Thrissur</option>
+                <option value="kottayam">Kottayam</option>
+                <option value="kozhikode">Kozhikode</option>
+                <option value="malapurram">Malapurram</option>
+            </select>
+
+            <select name="position" id="position" required>
+                <option value="" disabled selected>Select Position</option>
+                <option value="inspector">Inspector</option>
+                <option value="sub_inspector">Sub Inspector</option>
+                <option value="constable">Constable</option>
+            </select>
+
+            <button type="submit">Signup</button>
+        </form>
+        <p>Already have an account? <a href="login_police.html">Login</a></p>
+        <a href="../entry.html">Back to Home</a>
+    </div>
+    <script>
+        document.getElementById("signupForm").addEventListener("submit", function(event) {
+            let isValid = true;
+
+            // Validate Phone Number (must be exactly 10 digits)
+            let phone = document.getElementById("phone").value;
+            let phoneError = document.getElementById("phoneError");
+            if (!/^\d{10}$/.test(phone)) {
+                phoneError.textContent = "Phone number must be exactly 10 digits.";
+                isValid = false;
+            } else {
+                phoneError.textContent = "";
+            }
+
+            // Validate Email Format
+            let email = document.getElementById("email").value;
+            let emailError = document.getElementById("emailError");
+            let emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailPattern.test(email)) {
+                emailError.textContent = "Enter a valid email address.";
+                isValid = false;
+            } else {
+                emailError.textContent = "";
+            }
+
+            if (!isValid) {
+                event.preventDefault(); // Stop form submission if validation fails
+            }
+        });
+    </script>
+</body>
+</html>

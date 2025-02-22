@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Officers</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assign_officers.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2 class="title">Assign Officers</h2>
+
+        <div class="table-container">
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Case Number</th>
+                        <th>Place</th>
+                        <th>Details</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for case in cases %}
+                    <tr>
+                        <td>{{ case[0] }}</td>
+                        <td>{{ case[1] }}</td>
+                        <td><a href="{{ url_for('case_details', case_number=case[0]) }}" class="btn btn-warning">Decrypt</a></td>
+                        <td><a href="{{ url_for('assign_specific_officer', case_number=case[0]) }}" class="btn btn-success">Assigned Officers</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="back-container">
+            <a href="{{ url_for('manage_cases') }}" class="btn btn-secondary back-btn">Back to Manage Cases</a>
+        </div>
+    </div>
+</body>
+</html>

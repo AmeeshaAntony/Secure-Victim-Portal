@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Questioning</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background: url("https://img.freepik.com/premium-photo/lawyer-signing-business-contract-legal-document-paper-created-with-generative-ai-technology_132358-10942.jpg") no-repeat center center fixed;
+            background-size: cover;
+        }
+        .container {
+            max-width: 700px;
+            margin-top: 50px;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-label {
+            font-weight: 600;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 10px;
+        }
+        .btn-secondary {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+        }
+        .form-control {
+            border-radius: 5px;
+        }
+        .alert {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Case Questioning</h2>
+
+        <form action="{{ url_for('case_questioning', case_number=case_number) }}" method="POST">
+            <div class="mb-3">
+                <label for="detailed_description" class="form-label">Detailed Description</label>
+                <textarea class="form-control" id="detailed_description" name="detailed_description" rows="3" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="suspected_person" class="form-label">Suspected Person</label>
+                <input type="text" class="form-control" id="suspected_person" name="suspected_person" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="visited_location" class="form-label">Visited Location</label>
+                <input type="text" class="form-control" id="visited_location" name="visited_location" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="visit_reason" class="form-label">Reason for Visit</label>
+                <textarea class="form-control" id="visit_reason" name="visit_reason" rows="2" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="communication_details" class="form-label">Communication Details</label>
+                <textarea class="form-control" id="communication_details" name="communication_details" rows="2"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="evidence_details" class="form-label">Evidence Details</label>
+                <textarea class="form-control" id="evidence_details" name="evidence_details" rows="2"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <a href="{{ url_for('manage_cases') }}" class="btn btn-secondary">Back to Cases</a>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

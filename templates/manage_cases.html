@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Cases</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='manage_cases.css') }}">
+</head>
+<body>
+    <section class="container-grid">
+        <div class="container" onclick="window.location.href='{{ url_for('assign_officers') }}'">
+            <h2>Assign Officers</h2>
+        </div>
+        
+        <div class="container" onclick="window.location.href='view_case_status.html'">
+            <h2>View Case Status</h2>
+        </div>
+        <div class="container" onclick="window.location.href='{{ url_for('case_details_view') }}'">
+            <h2>Case Details</h2>
+        </div>
+        <div class="container" onclick="window.location.href='send_notification.html'">
+            <h2>Send Notification</h2>
+        </div>
+    </section>
+
+</body>
+</html>

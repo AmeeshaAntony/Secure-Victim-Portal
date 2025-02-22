@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='detail_case.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  <!-- Include jQuery -->
+</head>
+<body>
+    <h2>Case Status</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Case Number</th>
+                <th>Place</th>
+                <th>Time</th>
+                <th>Case Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for case in cases %}
+            <tr>
+                <td>{{ case[0] }}</td>
+                <td>{{ case[1] }}</td>
+                <td>{{ case[2] }}</td>
+                <td>
+                    <span class="status-text">{{ case[4] }}</span>
+                    <select class="update-status" data-case-number="{{ case[0] }}">
+                        <option value="Registered" {% if case[4] == 'Registered' %}selected{% endif %}>Registered</option>
+                        <option value="In Progress" {% if case[4] == 'In Progress' %}selected{% endif %}>In Progress</option>
+                        <option value="Closed" {% if case[4] == 'Closed' %}selected{% endif %}>Closed</option>
+                    </select>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+
+    <script>
+        $(document).ready(function() {
+            $(".update-status").on("change", function() {
+                var caseNumber = $(this).data("case-number");
+                var newStatus = $(this).val();
+                var statusElement = $(this).closest("tr").find(".status-text");
+        
+                $.ajax({
+                    url: "/update_case_status",
+                    type: "POST",
+                    data: { case_number: caseNumber, new_status: newStatus },
+                    success: function(response) {
+                        if (response.success) {
+                            statusElement.text(newStatus);
+                            alert("Case status updated successfully!");
+                        } else {
+                            alert("Error updating case status!");
+                        }
+                    }
+                });
+            });
+        });
+        </script>
+
+</body>
+</html>

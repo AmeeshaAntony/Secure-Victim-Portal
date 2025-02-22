@@ -1,0 +1,61 @@
+/* Set background image */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: url("detail_case.jpg") no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+    text-align: center;
+}
+
+/* Heading */
+h2 {
+    font-size: 28px;
+    margin-top: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Table Styling */
+table {
+    width: 80%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background-color: rgba(0, 0, 0, 0.7); /* Dark transparent background */
+    color: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Table Head */
+thead {
+    background-color: rgba(255, 255, 255, 0.2);
+    font-size: 18px;
+}
+
+/* Table Cells */
+th, td {
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    text-align: center;
+}
+
+/* Update Status Form */
+select, button {
+    padding: 8px;
+    margin-top: 5px;
+    font-size: 14px;
+    border-radius: 4px;
+}
+
+/* Button Styling */
+button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #218838;
+}

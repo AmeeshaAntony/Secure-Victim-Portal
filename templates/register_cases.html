@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Case</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='register_cases.css') }}">
+</head>
+<body>
+
+    <header>
+        <h1>Register a New Case</h1>
+    </header>
+
+    <form action="{{ url_for('register_case') }}" method="POST" enctype="multipart/form-data">
+        <label for="case_number">Case Number:</label>
+        <input type="text" id="case_number" name="case_number" required>
+
+        <label for="date_of_reporting">Date of Reporting:</label>
+        <input type="date" id="date_of_reporting" name="date_of_reporting" required>
+
+        <label for="place">Place:</label>
+        <input type="text" id="place" name="place" required>
+
+        <label for="reported_person">Reported Person:</label>
+        <input type="text" id="reported_person" name="reported_person" required>
+
+        <label for="phone_number">Phone Number:</label>
+        <input type="tel" id="phone_number" name="phone_number" required>
+
+        <label for="time">Time:</label>
+        <input type="time" id="time" name="time" required>
+
+        <label for="photo">Photo of Victim:</label>
+        <input type="file" id="photo" name="photo" accept="image/*" required>
+
+        <button type="submit">Submit Case</button>
+    </form>
+
+</body>
+</html>

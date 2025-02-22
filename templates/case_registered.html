@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Registered</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='case_registered.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Case Registered Successfully!</h2>
+        <p>The case has been successfully registered and recorded in the system.</p>
+        <a href="{{ url_for('manage_cases') }}" class="btn btn-primary">View All Cases</a>
+        <a href="{{ url_for('police_home') }}" class="btn btn-secondary">Go to Home</a>
+    </div>
+</body>
+</html>

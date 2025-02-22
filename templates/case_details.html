@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='case_details.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Case Details</h2>
+        <table>
+            <tr>
+                <th>Case Number</th>
+                <td>{{ case[1] }}</td>  <!-- Fetch case_number from the database -->
+            </tr>
+            <tr>
+                <th>Date of Reporting</th>
+                <td>{{ case[2] }}</td>
+            </tr>
+            <tr>
+                <th>Place</th>
+                <td>{{ case[3] }}</td>
+            </tr>
+            <tr>
+                <th>Reported Person</th>
+                <td>{{ case[4] }}</td>
+            </tr>
+            <tr>
+                <th>Phone Number</th>
+                <td>{{ case[5] }}</td>
+            </tr>
+            <tr>
+                <th>Time</th>
+                <td>{{ case[6] }}</td>
+            </tr>
+            <tr>
+                <th>Photo</th>
+                <td>
+                    {% if case[7] %}  
+                        <a href="{{ url_for('decrypt_photo', case_number=case[1]) }}" class="btn btn-warning">Decrypt</a>
+                    {% else %}
+                        No photo available
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+        <a href="/" class="btn btn-secondary">Back</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,94 @@
+/* General page styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    text-align: center;
+}
+
+/* Container for centering content */
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 20px;
+}
+
+/* Title styling */
+.title {
+    text-align: center;
+    font-size: 26px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Table styling */
+.table-container {
+    display: flex;
+    justify-content: center;
+}
+
+table {
+    width: 100%;
+    max-width: 1000px;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+th, td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+th {
+    background-color: #343a40;
+    color: white;
+}
+
+/* Button styling */
+.btn {
+    padding: 8px 12px;
+    font-size: 14px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.encrypt-btn {
+    background-color: #ffc107;
+    color: black;
+    border-radius: 4px;
+}
+
+.encrypt-btn:hover {
+    background-color: #e0a800;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+    border-radius: 4px;
+    padding: 6px 12px;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+/* Back button styling */
+.back-container {
+    margin-top: 20px;
+}
+
+.back-btn {
+    background-color: #6c757d;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.back-btn:hover {
+    background-color: #545b62;
+}
