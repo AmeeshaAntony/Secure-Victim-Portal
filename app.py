@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session , jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session , jsonify 
 import sqlite3
 import os
+import bcrypt
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -21,7 +23,24 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Ensure upload folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+conn = sqlite3.connect('user.db')
+cursor = conn.cursor()
 
+# Create users table
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fullname TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        phone TEXT NOT NULL,
+        location TEXT NOT NULL,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL
+    )
+''')
+
+conn.commit()
+conn.close()
 # Initialize `police.db` for police officer management
 def init_police_db():
     with sqlite3.connect('police.db') as conn:
@@ -39,6 +58,9 @@ def init_police_db():
             )
         ''')
         conn.commit()
+
+# Create the database and users table if not exists
+
 
 def init_admin_db():
     with sqlite3.connect('admin.db') as conn:
@@ -527,6 +549,94 @@ def delete_police_officer(officer_id):
     conn.close()
     return jsonify({"message": "Officer deleted successfully"}), 200
 
+def get_cases():
+    conn = sqlite3.connect('cases.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, case_number, date_of_reporting, place, reported_person, phone_number, time, photo FROM cases")
+    cases = cursor.fetchall()
+    conn.close()
+
+    return [{"id": c[0], "case_number": c[1], "date_of_reporting": c[2], "place": c[3], 
+             "reported_person": c[4], "phone_number": c[5], "time": c[6], "photo": c[7]} for c in cases]
+
+@app.route('/get_cases')
+def fetch_cases():
+    return jsonify(get_cases())
+
+@app.route('/case_management')
+def case_management():
+    return render_template('secret_key_prompt.html')
+
+@app.route('/verify_secret_key', methods=['POST'])
+def verify_secret_key():
+    key = request.form.get('key')
+    if key == "crime":
+        return render_template('case_details_admin.html')  # Load the admin case details page
+    else:
+        return "Unauthorized Access", 403
+    
+def get_admin():
+    conn = sqlite3.connect("admin.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM admin WHERE id = 1")  # Assuming single admin
+    admin = cur.fetchone()
+    conn.close()
+    return admin
+
+@app.route("/admin_settings")
+def admin_settings():
+    section = request.args.get("section", "profile")
+    admin = get_admin()
+    return render_template("admin_settings.html", section=section, admin=admin)
+
+@app.route("/edit_admin", methods=["POST"])
+def edit_admin():
+    name = request.form["name"]
+    phone = request.form["phone"]
+    email = request.form["email"]
+
+    conn = sqlite3.connect("admin.db")
+    cur = conn.cursor()
+    cur.execute("UPDATE admin SET name=?, phone=?, email=? WHERE id=1", (name, phone, email))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("admin_settings", section="profile"))
+
+@app.route('/update_security_settings', methods=['POST'])
+def update_security_settings():
+    # Handle form submission logic here
+    officer_actions = request.form.getlist('actions')
+    print("Received security settings update:", officer_actions)  # Debugging output
+    return redirect(url_for('admin_settings', section='security'))
+
+
+@app.route('/user')
+def user_login():
+    return render_template('user_login.html') 
+
+@app.route('/user_signup', methods=['GET', 'POST'])
+def user_signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        if password != confirm_password:
+            return render_template('user_signup.html', error="Passwords do not match!")
+
+        # Hash the password before storing (Replace this with DB logic)
+        hashed_password = generate_password_hash(password)
+
+        # Store the new user in a database (Example code, replace with actual DB logic)
+        users[username] = {"email": email, "password": hashed_password}
+
+        return redirect(url_for('user_login'))
+
+    return render_template('user_signup.html')
+    
 
 if __name__ == '__main__':
     app.run(debug=True)

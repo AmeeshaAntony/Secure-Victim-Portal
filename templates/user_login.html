@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Victim Portal - User Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: white;
+        }
+        .login-container {
+            width: 420px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            padding: 30px;
+        }
+        .login-form h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: cyan;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: cyan;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #1f1f1f;
+            color: white;
+        }
+        .remember-me {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+        .remember-me a {
+            text-decoration: none;
+            color: cyan;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 10px;
+            background: cyan;
+            border: none;
+            color: black;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .login-btn:hover {
+            background: #00cccc;
+        }
+        .signup {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .signup a {
+            text-decoration: none;
+            color: cyan;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-form">
+            <h2>User Login</h2>
+            
+            {% if error %}
+                <p style="color: red; text-align: center;">{{ error }}</p>
+            {% endif %}
+
+            <form action="/user_login" method="POST">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <div class="remember-me">
+                    <label><input type="checkbox"> Remember Me</label>
+                    <a href="#">Forgot Password?</a>
+                </div>
+                <button type="submit" class="login-btn">Sign In</button>
+            </form>
+            <div class="signup">
+                Don't have an account? <a href="{{ url_for('user_signup') }}">Sign up</a>
+            </div>            
+        </div>
+    </div>
+</body>
+</html>

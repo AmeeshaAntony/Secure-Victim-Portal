@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Role-Based Access Control</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        #access-control-content {
+            padding: 20px;
+        }
+        h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="access-control-content">
+        <h3>🛡 Role-Based Access Control</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Role</th>
+                    <th>Permissions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Inspector</td>
+                    <td>View Case Updates</td>
+                </tr>
+                <tr>
+                    <td>Sub Inspector</td>
+                    <td>Manage Evidence</td>
+                </tr>
+                <tr>
+                    <td>Circle Inspector</td>
+                    <td>Authorize Arrest Warrants</td>
+                </tr>
+                <tr>
+                    <td>Assistant Commissioner</td>
+                    <td>Approve High-Level Cases</td>
+                </tr>
+                <tr>
+                    <td>Commissioner</td>
+                    <td>Full Administrative Control</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>
