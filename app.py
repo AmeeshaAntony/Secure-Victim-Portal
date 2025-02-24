@@ -1,11 +1,15 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session , jsonify 
 import sqlite3
 import os
+import re
+from flask_bcrypt import Bcrypt
+from werkzeug.utils import secure_filename
 import bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+bcrypt = Bcrypt(app)
 app.secret_key = "your_secret_key"  # Required for flash messages
 SECRET_KEY = "crime"  # Set the correct decryption key
 
@@ -62,21 +66,45 @@ def init_police_db():
 # Create the database and users table if not exists
 
 
+conn = sqlite3.connect('admin.db')
+cursor = conn.cursor()
+
+# Create the admin table if it doesn't exist
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS admin (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        position TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        state TEXT NOT NULL,
+        district TEXT NOT NULL,
+        judicial_id TEXT UNIQUE NOT NULL,
+        id_card_photo TEXT NOT NULL,
+        password TEXT NOT NULL
+    )
+''')
+
+conn.commit()
+conn.close()
 def init_admin_db():
     with sqlite3.connect('admin.db') as conn:
         cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS admin (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                phone TEXT NOT NULL UNIQUE,
-                email TEXT NOT NULL UNIQUE,
-                password TEXT NOT NULL,
-                role TEXT NOT NULL DEFAULT 'admin'
+                full_name TEXT NOT NULL,
+                position TEXT NOT NULL,
+                phone TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                state TEXT NOT NULL,
+                district TEXT NOT NULL,
+                judicial_id TEXT UNIQUE NOT NULL,
+                id_card_photo TEXT NOT NULL,
+                password TEXT NOT NULL
             )
         ''')
         conn.commit()
-
 # Call the function to ensure the database is set up
 init_admin_db()
 
@@ -462,6 +490,30 @@ def logout():
     return redirect(url_for('police_login'))
 
 
+def check_admin(email, password):
+    """
+    Checks if the given email and password match an admin in the database.
+
+    :param email: Admin's email
+    :param password: Password entered by the admin
+    :return: Admin details if valid, None otherwise
+    """
+    try:
+        with sqlite3.connect("admin.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, full_name, password FROM admin WHERE email = ?", (email,))
+            admin = cursor.fetchone()
+
+            if admin:
+                admin_id, admin_name, hashed_password = admin
+                # Verify password using bcrypt
+                if bcrypt.check_password_hash(hashed_password, password):
+                    return (admin_id, admin_name)  # Return admin details if authentication is successful
+    except sqlite3.Error as e:
+        print("Database error:", e)
+
+    return None  # Return None if authentication fails
+
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -489,49 +541,69 @@ def admin_dashboard():
 @app.route('/admin/signup', methods=['GET', 'POST'])
 def admin_signup():
     if request.method == 'POST':
-        name = request.form['full_name']
+        full_name = request.form['full_name']
+        position = request.form['position']
         phone = request.form['phone']
         email = request.form['email']
+        state = request.form['state']
+        district = request.form['district']
+        judicial_id = request.form['judicial_id']
         password = request.form['password']
         confirm_password = request.form['confirm_password']
+        id_card_photo = request.files['id_card_photo']
 
-        if password != confirm_password:
-            flash("Passwords do not match. Please try again.", "danger")
+        # ✅ **Validations**
+        # Phone number must be exactly 10 digits
+        if not re.match(r'^\d{10}$', phone):
+            flash("Phone number must be exactly 10 digits", "error")
             return redirect(url_for('admin_signup'))
 
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        # Email validation
+        if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
+            flash("Invalid email format", "error")
+            return redirect(url_for('admin_signup'))
 
+        # Judicial ID must start with 'J' and end with a digit
+        if not re.match(r'^J.*\d$', judicial_id):
+            flash("Judicial ID must start with 'J' and end with a digit", "error")
+            return redirect(url_for('admin_signup'))
+
+        # Password must have an uppercase, lowercase, digit, special character, and at least 8 characters
+        if not re.match(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$', password):
+            flash("Password must have uppercase, lowercase, number, special character, and be at least 8 characters long", "error")
+            return redirect(url_for('admin_signup'))
+
+        # Check if passwords match
+        if password != confirm_password:
+            flash("Passwords do not match", "error")
+            return redirect(url_for('admin_signup'))
+
+        # ✅ **Handle Image Upload**
+        if id_card_photo.filename == '':
+            flash("Please upload an ID card photo", "error")
+            return redirect(url_for('admin_signup'))
+
+        filename = secure_filename(id_card_photo.filename)
+        id_card_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        id_card_photo.save(id_card_path)  # Save the file
+
+        # ✅ **Store Data in Database**
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')  # Hash password before storing
         try:
-            conn = sqlite3.connect('admin.db')
-            cursor = conn.cursor()
-            cursor.execute('''INSERT INTO admin (name, phone, email, password) VALUES (?, ?, ?, ?)''',
-                           (name, phone, email, hashed_password))
-            conn.commit()
-            conn.close()
-            
-            flash("Admin signup successful! Please log in.", "success")
-            return redirect(url_for('admin_login'))
-
+            with sqlite3.connect('admin.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT INTO admin (full_name, position, phone, email, state, district, judicial_id, id_card_photo, password)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (full_name, position, phone, email, state, district, judicial_id, id_card_path, hashed_password))
+                conn.commit()
+                flash("Admin registered successfully!", "success")
+                return redirect(url_for('admin_login'))
         except sqlite3.IntegrityError:
-            flash("Error: Email or Phone already exists.", "danger")
+            flash("Email or Judicial ID already exists!", "error")
             return redirect(url_for('admin_signup'))
 
     return render_template('admin_signup.html')
-
-
-def check_admin(email, password):
-    conn = sqlite3.connect("admin.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, name, password FROM admin WHERE email=?", (email,))
-    admin = cursor.fetchone()
-    conn.close()
-
-    if admin and check_password_hash(admin[2], password):  # Compare hashed password
-        return admin  # Return admin data if login is successful
-    return None 
-
-# Admin Login Route
-
 
 # Admin Home Route
 @app.route("/admin_home")
