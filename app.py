@@ -359,18 +359,46 @@ def case_details_view():
 
     return render_template("detail_case.html", cases=case_data)
 
+@app.route('/cases')
+def show_cases():
+    conn = sqlite3.connect('cases.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM cases")  # Modify based on your table structure
+    cases = cursor.fetchall()
+    conn.close()
+    return render_template('detail_case.html', cases=cases)
 
 @app.route('/update_case_status', methods=['POST'])
 def update_case_status():
-    case_number = request.form['case_number']
-    new_status = request.form['new_status']
+    case_number = request.form.get('case_number')
+    new_status = request.form.get('new_status')
 
-    with sqlite3.connect('cases.db') as conn:
+    conn = sqlite3.connect('cases.db')
+    cursor = conn.cursor()
+    cursor.execute("UPDATE cases SET status = ? WHERE case_number = ?", (new_status, case_number))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
+
+@app.route('/delete_case', methods=['POST'])
+def delete_case():
+    try:
+        case_number = request.form.get('case_number')
+        print(f"Deleting case: {case_number}")  # Debugging log
+
+        conn = sqlite3.connect('cases.db')
         cursor = conn.cursor()
-        cursor.execute("UPDATE cases SET case_status = ? WHERE case_number = ?", (new_status, case_number))
+        cursor.execute("DELETE FROM cases WHERE case_number = ?", (case_number,))
         conn.commit()
+        conn.close()
 
-    return jsonify({'success': True, 'new_status': new_status})
+        print("Case deleted successfully!")  # Debugging log
+        return jsonify({'success': True})
+    except Exception as e:
+        print("Error deleting case:", str(e))  # Debugging log
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/update_profile', methods=['GET', 'POST'])
 def update_profile():
     if 'user_id' not in session:

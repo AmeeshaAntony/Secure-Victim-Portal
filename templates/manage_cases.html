@@ -15,13 +15,20 @@
         <div class="container" onclick="window.location.href='view_case_status.html'">
             <h2>View Case Status</h2>
         </div>
+        
         <div class="container" onclick="window.location.href='{{ url_for('case_details_view') }}'">
             <h2>Case Details</h2>
         </div>
+        
         <div class="container" onclick="window.location.href='send_notification.html'">
             <h2>Send Notification</h2>
         </div>
     </section>
+
+    <!-- Home Button -->
+    <div class="home-button">
+        <button onclick="window.location.href='{{ url_for('police_home') }}'">Home</button>
+    </div>
 
 </body>
 </html>

@@ -18,7 +18,7 @@
                 <button type="submit" class="btn btn-primary">Submit</button>
             </form>
         {% else %}
-            <img src="{{ url_for('static', filename=case[7].replace('\\', '/').replace('static/', '')) }}" alt="Decrypted Photo" width="300">
+            <img src="{{ url_for('static', filename='uploads/' + case[7].split('/')[-1]) }}" alt="Decrypted Photo" width="300">
         {% endif %}
 
         <br><br>
