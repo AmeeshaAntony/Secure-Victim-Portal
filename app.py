@@ -14,6 +14,8 @@ app = Flask(__name__)
 bcrypt = Bcrypt(app)
 app.secret_key = "your_secret_key"  # Required for flash messages
 SECRET_KEY = "crime"  # Set the correct decryption key
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
+
 
 def get_case(case_number):
     """Fetch case details from the database using case number."""
@@ -51,6 +53,8 @@ conn.close()
 def init_police_db():
     with sqlite3.connect('police.db') as conn:
         cursor = conn.cursor()
+        
+        # Create the table if it doesn't exist
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS police_officer (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,7 +67,26 @@ def init_police_db():
                 position TEXT NOT NULL
             )
         ''')
+
+        # Alter table to add new columns if they don't exist
+        try:
+            cursor.execute("ALTER TABLE police_officer ADD COLUMN police_id TEXT UNIQUE")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
+        try:
+            cursor.execute("ALTER TABLE police_officer ADD COLUMN aadhar_card_path TEXT")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
         conn.commit()
+
+# Call the function to apply changes
+init_police_db()
+
+
+
+
 
 # Create the database and users table if not exists
 
@@ -268,10 +291,14 @@ def police_login():
 
     return render_template('police_login.html')
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/police/signup', methods=['GET', 'POST'])
 def police_signup():
     if request.method == 'POST':
         name = request.form['name']
+        police_id = request.form['police_id']
         phone = request.form['phone']
         email = request.form['email']
         password = request.form['password']
@@ -279,27 +306,48 @@ def police_signup():
         state = request.form['state']
         district = request.form['district']
         position = request.form['position']
-
+        
+        # Check password match
         if password != confirm_password:
             flash("Passwords do not match. Please try again.", "danger")
             return redirect(url_for('police_signup'))
 
+        # Validate Police ID
+        if not police_id.startswith("P") or not police_id[1:].isdigit():
+            flash("Invalid Police ID. It must start with 'P' followed by numbers.", "danger")
+            return redirect(url_for('police_signup'))
+
+        # Hash Password
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+
+        # Handle Aadhar Card Upload
+        if 'aadhar_card' not in request.files:
+            flash("Please upload your Aadhar card.", "danger")
+            return redirect(url_for('police_signup'))
+        
+        aadhar_card = request.files['aadhar_card']
+        if aadhar_card.filename == '' or not allowed_file(aadhar_card.filename):
+            flash("Invalid file format. Please upload a PNG, JPG, JPEG, or PDF.", "danger")
+            return redirect(url_for('police_signup'))
+        
+        filename = secure_filename(aadhar_card.filename)
+        aadhar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        aadhar_card.save(aadhar_path)
 
         try:
             with sqlite3.connect('police.db') as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
-                    INSERT INTO police_officer (name, phone, email, password, state, district, position)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (name, phone, email, hashed_password, state, district, position))
+                    INSERT INTO police_officer (name, police_id, phone, email, password, state, district, position, aadhar_card_path)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (name, police_id, phone, email, hashed_password, state, district, position, aadhar_path))
                 conn.commit()
 
             flash("Signup successful! Please log in.", "success")
             return redirect(url_for('police_login'))
 
         except sqlite3.IntegrityError:
-            flash("Error: Email or Phone already exists.", "danger")
+            flash("Error: Police ID, Email, or Phone already exists.", "danger")
             return redirect(url_for('police_signup'))
 
     return render_template('police_signup.html')
