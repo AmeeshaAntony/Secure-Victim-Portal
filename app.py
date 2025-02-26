@@ -245,6 +245,10 @@ def police_home():
         return redirect(url_for('police_login'))
     return render_template('home.html', name=session.get('user_name'))
 
+@app.route('/about')
+def about():
+    return render_template('police_about.html')
+
 @app.route('/assign_officers')
 def assign_officers():
     with sqlite3.connect("cases.db") as conn:
