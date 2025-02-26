@@ -41,7 +41,7 @@
                         <a href="{{ url_for('admin_settings') }}" class="box">⚙️ Settings</a>
                     </div>
                     <div class="col-md-6">
-                        <a href="#" class="box">📊 Logging & Monitoring</a>
+                        <a href="{{ url_for('admin_logs') }}" class="box">📊 Logging & Monitoring</a>
                     </div>
                 </div>
                 <div class="row">
@@ -55,6 +55,12 @@
             </div>
         </div>
     </div>
-
+    <script>
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = function() {
+            window.history.pushState(null, "", window.location.href);
+        };
+    </script>
+    
 </body>
 </html>

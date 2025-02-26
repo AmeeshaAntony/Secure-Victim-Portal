@@ -18,7 +18,7 @@
         }
         .settings-wrapper {
             display: flex;
-            gap: 30px; /* Space between sidebar and main content */
+            gap: 30px;
         }
         .sidebar {
             background: rgba(255, 255, 255, 0.9);
@@ -57,9 +57,9 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <h4 class="text-center">Settings</h4>
-            <a href="{{ url_for('admin_settings', section='profile') }}" class="active">👤 Profile</a>
-            <a href="{{ url_for('admin_settings', section='security') }}">🔐 Adjust Security Settings</a>
-            <a href="{{ url_for('admin_settings', section='access_control') }}">🛡 Role-Based Access Control</a>
+            <a href="{{ url_for('admin_settings', section='profile') }}" class="{% if section == 'profile' %}active{% endif %}">👤 Profile</a>
+            <a href="{{ url_for('admin_settings', section='security') }}" class="{% if section == 'security' %}active{% endif %}">🔐 Adjust Security Settings</a>
+            <a href="{{ url_for('admin_settings', section='access_control') }}" class="{% if section == 'access_control' %}active{% endif %}">🛡 Role-Based Access Control</a>
         </div>
 
         <!-- Main Content -->
@@ -81,18 +81,40 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Position</label>
-                    <input type="text" class="form-control" name="position" value="judge" readonly>
+                    <input type="text" class="form-control" name="position" value="{{ admin.position }}" readonly>
                 </div>
                 <button type="submit" class="btn btn-primary">✏️ Edit</button>
             </form>
+
             {% elif section == 'security' %}
             <h3>🔐 Adjust Security Settings</h3>
             <p>Security settings options will be here.</p>
+
             {% elif section == 'access_control' %}
             <h3>🛡 Role-Based Access Control</h3>
-            <p>Role-based access settings will be here.</p>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Officer Name</th>
+                        <th>Access Level</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for officer in officers %}
+                    <tr>
+                        <td>{{ officer[0] }}</td>
+                        <td>{{ officer[1] }}</td>
+                        <td>{{ officer[2] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             {% endif %}
         </div>
+    </div>
+    <div class="text-center mt-4">
+        <a href="{{ url_for('admin_home') }}" class="btn btn-primary">Home</a>
     </div>
 </div>
 

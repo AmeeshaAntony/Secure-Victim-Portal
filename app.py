@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session , jsonify 
+import datetime
+from flask import Flask, make_response, render_template, request, redirect, url_for, flash, session , jsonify 
 import sqlite3
 import os
+from datetime import datetime
 import re
 from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
@@ -154,6 +156,55 @@ try:
     add_case_status_column()
 except sqlite3.OperationalError:
     pass 
+
+import sqlite3
+
+# Connect to the database (or create if it doesn't exist)
+conn = sqlite3.connect('access_control.db')
+cursor = conn.cursor()
+
+# Create table for officers' access levels
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS officers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        rank TEXT NOT NULL,
+        access_level TEXT NOT NULL CHECK(access_level IN ('Read', 'Write', 'Admin'))
+    )
+''')
+
+# Create table for case logs
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS case_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        officer_id INTEGER,
+        case_number TEXT,
+        action TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (officer_id) REFERENCES officers(id)
+    )
+''')
+
+
+# Insert sample data (only if the table is empty)
+cursor.execute("SELECT COUNT(*) FROM officers")
+if cursor.fetchone()[0] == 0:
+    cursor.executemany('''
+        INSERT INTO officers (name, rank, access_level) VALUES (?, ?, ?)
+    ''', [
+        ("Officer A","Constable","Read"),
+        ("Officer B", "Sub Inspector", "Read"),
+        ("Officer C", "Inspector", "Read"),
+        ("Officer D", "Circle Inspector", "Write"),
+        ("Officer E", "Judge", "Admin"),
+        ("Officer F", "DGP", "Admin")
+    ])
+
+# Commit and close
+conn.commit()
+conn.close()
+
+print("Database and table created successfully!")
 
 # Call functions to initialize databases
 init_police_db()
@@ -328,6 +379,20 @@ def manage_cases():
 
     return render_template('manage_cases.html', cases=cases)
 
+@app.route('/admin/logs')
+def admin_logs():
+    conn = sqlite3.connect('access_control.db')
+    conn.row_factory = sqlite3.Row  # This allows accessing columns by name
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM case_logs ORDER BY timestamp DESC")  # Fetch logs sorted by timestamp
+    logs = cursor.fetchall()
+    
+    conn.close()
+    
+    return render_template('admin_logs.html', logs=logs)
+
+
 @app.route('/case_details/<case_number>')
 def case_details(case_number):
     with sqlite3.connect("cases.db") as conn:
@@ -341,9 +406,22 @@ def case_details(case_number):
 
     return render_template("case_details.html", case=case)
 
+def log_case_action(officer_id, case_number, action):
+    conn = sqlite3.connect("access_control.db")
+    cur = conn.cursor()
+    
+    cur.execute("""
+        INSERT INTO case_logs (officer_id, case_number, action, timestamp)
+        VALUES (?, ?, ?, ?)
+    """, (officer_id, case_number, action, datetime.now()))
+
+    conn.commit()
+    conn.close()
+
 @app.route('/decrypt_photo/<case_number>', methods=['GET', 'POST'])
 def decrypt_photo(case_number):
     case = get_case(case_number)
+    officer_id = session.get('officer_id')  # Assuming officer is logged in
 
     if not case:
         flash("Case not found!", "danger")
@@ -353,6 +431,8 @@ def decrypt_photo(case_number):
         entered_key = request.form.get('secret_key')
 
         if entered_key == SECRET_KEY:
+            # ✅ Automatically log that the officer decrypted the photo
+            log_case_action(officer_id, case_number, "Decrypted Photo")
             return render_template('decrypt_photo.html', case=case, decrypted=True)
         else:
             flash("Incorrect secret key! Try again.", "danger")
@@ -605,7 +685,15 @@ def admin_signup():
 
     return render_template('admin_signup.html')
 
-# Admin Home Route
+def no_cache(view):
+    """Decorator to prevent caching"""
+    def wrapped_view(*args, **kwargs):
+        response = make_response(view(*args, **kwargs))
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '-1'
+        return response
+    return wrapped_view
 @app.route("/admin_home")
 def admin_home():
     if "admin_id" not in session:
@@ -617,10 +705,12 @@ def admin_home():
 
 @app.route('/admin/logout')
 def admin_logout():
-    session.pop('admin_id', None)
-    session.pop('admin_name', None)
-    flash("You have been logged out.", "info")
-    return redirect(url_for('admin_login'))
+    session.clear()  # Clear all session data
+    response = make_response(redirect(url_for('admin_login')))  # Redirect to login
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
 
 def get_police_officers():
     conn = sqlite3.connect('police.db')
@@ -675,20 +765,52 @@ def verify_secret_key():
     else:
         return "Unauthorized Access", 403
     
-def get_admin():
-    conn = sqlite3.connect("admin.db")
-    conn.row_factory = sqlite3.Row
+def get_officers():
+    conn = sqlite3.connect("access_control.db")  # ✅ Correct database
     cur = conn.cursor()
-    cur.execute("SELECT * FROM admin WHERE id = 1")  # Assuming single admin
+    cur.execute("SELECT id, rank, access_level FROM officers")  # ✅ Fetch only required columns
+    officers = cur.fetchall()
+    conn.close()
+    return officers
+
+# Function to fetch admin details from admin.db
+def get_admin():
+    conn = sqlite3.connect("admin.db")  # ✅ Connect to the correct DB
+    cur = conn.cursor()
+    cur.execute("SELECT full_name, phone, email, position FROM admin WHERE id=1")
     admin = cur.fetchone()
     conn.close()
-    return admin
+    
+    if admin:
+        return {"name": admin[0], "phone": admin[1], "email": admin[2], "position": admin[3]}
+    return None  # Handle case where admin is not found
 
-@app.route("/admin_settings")
+@app.route('/admin/settings')
 def admin_settings():
-    section = request.args.get("section", "profile")
-    admin = get_admin()
-    return render_template("admin_settings.html", section=section, admin=admin)
+    section = request.args.get('section', 'profile')
+    
+    officers = get_officers()  # Fetch from access_control.db
+    admin = get_admin()  # Fetch from admin.db
+
+    if not admin:
+        return "Admin not found", 404  # Handle error if admin doesn't exist
+
+    return render_template('admin_settings.html', section=section, officers=officers, admin=admin)
+
+@app.route('/update_access_control', methods=['POST'])
+def update_access_control():
+    data = request.get_json()
+    officer_id = int(data['officer_id'])
+    new_access_level = data['new_access_level']
+
+    # Update access level in the database
+    conn = sqlite3.connect('access_control.db')
+    cursor = conn.cursor()
+    cursor.execute("UPDATE officers SET access_level = ? WHERE id = ?", (new_access_level, officer_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Access level updated successfully!"})
 
 @app.route("/edit_admin", methods=["POST"])
 def edit_admin():
@@ -696,9 +818,9 @@ def edit_admin():
     phone = request.form["phone"]
     email = request.form["email"]
 
-    conn = sqlite3.connect("admin.db")
+    conn = sqlite3.connect("admin.db")  # ✅ Connect to admin DB
     cur = conn.cursor()
-    cur.execute("UPDATE admin SET name=?, phone=?, email=? WHERE id=1", (name, phone, email))
+    cur.execute("UPDATE admin SET full_name=?, phone=?, email=? WHERE id=1", (name, phone, email))
     conn.commit()
     conn.close()
 
