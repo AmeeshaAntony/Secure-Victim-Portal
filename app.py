@@ -447,16 +447,22 @@ def admin_logs():
 
 @app.route('/case_details/<case_number>')
 def case_details(case_number):
-    with sqlite3.connect("cases.db") as conn:
+    officer_id = session.get('officer_id')  # Ensure officer is logged in
+
+    # Fetch case details from your database
+    with sqlite3.connect('cases.db') as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM cases WHERE case_number = ?", (case_number,))
         case = cursor.fetchone()
 
     if not case:
         flash("Case not found!", "danger")
-        return redirect(url_for("manage_cases"))
+        return redirect(url_for('home'))
 
-    return render_template("case_details.html", case=case)
+    # ✅ Log that the officer viewed the case details
+    log_case_action(officer_id, case_number, "Viewed Case Details")
+
+    return render_template('case_details.html', case=case)
 
 def log_case_action(officer_id, case_number, action):
     conn = sqlite3.connect("access_control.db")
