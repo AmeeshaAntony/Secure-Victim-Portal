@@ -5,8 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Victim Portal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+    <style>
+        /* CSS for the logout button */
+        .logout-btn {
+            position: absolute; /* Position the button absolutely */
+            top: 20px; /* Distance from the top */
+            right: 20px; /* Distance from the right */
+            background-color: red; /* Red background */
+            color: white; /* White text */
+            padding: 10px 20px; /* Padding */
+            border: none; /* No border */
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer; /* Pointer cursor on hover */
+            font-size: 16px; /* Font size */
+            text-decoration: none; /* Remove underline */
+            z-index: 1000; /* Ensure it appears above other elements */
+        }
+
+        .logout-btn:hover {
+            background-color: darkred; /* Darker red on hover */
+        }
+    </style>
 </head>
 <body>
+
+    <!-- Logout Button at the top-right corner -->
+    <a href="{{ url_for('police_logout') }}" class="logout-btn">Logout</a>
 
     <header>
         <h1>Secure Victim Portal</h1>

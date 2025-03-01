@@ -1,0 +1,104 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.query-form {
+    max-width: 600px;
+    width: 100%;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.query-form h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.query-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.query-form input[type="text"],
+.query-form input[type="email"],
+.query-form select,
+.query-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.query-form button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.query-form button:hover {
+    background-color: #45a049;
+}
+
+.alert {
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.settings-btn-container {
+    padding-top:10px;
+    text-align: center;
+    margin-top: 20px;
+    width: 100%;
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    display: flex;
+    justify-content: center; /* Center the button horizontally */
+}
+
+.settings-btn {
+    padding-top:10px;
+    width: 200px; /* Fixed width for the button */
+    padding: 10px;
+    background-color: #007bff; /* Blue color for the settings button */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.settings-btn:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}

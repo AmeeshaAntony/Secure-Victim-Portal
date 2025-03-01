@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Victim Portal Query Form</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='police_query.css') }}">
+</head>
+<body>
+    <div class="query-form">
+        <h2>Secure Victim Portal Query Form</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form action="{{ url_for('submit_query') }}" method="POST">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" placeholder="Enter your name" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email" required>
+
+            <label for="query-type">Query Type:</label>
+            <select id="query-type" name="query-type" required>
+                <option value="" disabled selected>Select query type</option>
+                <option value="Case Update">Case Update</option>
+                <option value="New Case Registration">New Case Registration</option>
+                <option value="Evidence Submission">Evidence Submission</option>
+                <option value="Witness Information">Witness Information</option>
+                <option value="Legal Assistance">Legal Assistance</option>
+                <option value="Safety Concerns">Safety Concerns</option>
+                <option value="Feedback">Feedback</option>
+                <option value="Technical Issues">Technical Issues</option>
+                <option value="Other">Others</option>
+            </select>
+
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" rows="5" placeholder="Enter your query description" required></textarea>
+
+            <button type="submit">Submit Query</button>
+        </form>
+    </div>
+    <button class="settings-btn" onclick="window.location.href='{{ url_for('settings') }}'">Settings</button>
+</body>
+</html>

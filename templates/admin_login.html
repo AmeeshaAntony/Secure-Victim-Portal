@@ -3,8 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Admin Login</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='admin_login.css') }}">
+    <style>
+        /* Additional CSS for the Welcome button */
+        .welcome-container {
+            text-align: center; /* Center the button horizontally */
+            margin-top: 20px; /* Add some space above the button */
+            position: absolute; /* Position the button at the bottom */
+            bottom: 20px; /* Distance from the bottom */
+            width: 100%; /* Full width to center the button */
+        }
+
+        .welcome-btn {
+            background-color: #4CAF50; /* Green background */
+            color: white; /* White text */
+            padding: 10px 20px; /* Padding */
+            border: none; /* No border */
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer; /* Pointer cursor on hover */
+            font-size: 16px; /* Font size */
+        }
+
+        .welcome-btn:hover {
+            background-color: #45a049; /* Darker green on hover */
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -20,7 +47,7 @@
                         </div>
                     {% endif %}
                 {% endwith %}
-                <form method="POST" action="/admin">
+                <form method="POST" action="{{ url_for('admin_login') }}">
                     <label for="username">USERNAME</label>
                     <input type="text" id="username" name="username" placeholder="Username" required>
 
@@ -34,9 +61,26 @@
             <div class="right-box">
                 <h2>Welcome to login</h2>
                 <p>Don't have an account?</p>
-                <button class="signup-btn" onclick="window.location.href='/admin/signup'">Sign Up</button>
+                <button class="signup-btn" onclick="window.location.href='{{ url_for('admin_signup') }}'">Sign Up</button>
             </div>
         </div>
     </div>
+
+    <!-- Welcome Button at the bottom center of the page -->
+    <div class="welcome-container">
+        <button class="welcome-btn" onclick="window.location.href='{{ url_for('welcome') }}'">Welcome Page</button>
+    </div>
+
+    <script>
+        // Force redirect to login page if the user tries to navigate back
+        window.onload = function() {
+            // Use history manipulation to prevent back navigation
+            window.history.pushState(null, "", window.location.href);
+            window.onpopstate = function() {
+                window.history.pushState(null, "", window.location.href);
+                window.location.href = "{{ url_for('admin_login') }}";  // Force redirect to login page
+            };
+        };
+    </script>
 </body>
 </html>

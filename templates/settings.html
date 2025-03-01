@@ -14,10 +14,10 @@
         <div class="container" onclick="window.location.href='adjust_security.html'">
             <h2>Adjust Security Settings</h2>
         </div>
-        <div class="container" onclick="window.location.href='notification_preferences.html'">
+        <div class="container" onclick="window.location.href='{{ url_for('police_notification_settings') }}'">
             <h2>Notification Preferences</h2>
         </div>
-        <div class="container" onclick="window.location.href='query_reporting.html'">
+        <div class="container" onclick="window.location.href='{{ url_for('police_query') }}'">
             <h2>Query Reporting</h2>
         </div>
     </section>

@@ -49,18 +49,43 @@
                         <a href="{{ url_for('local_police_officers') }}" class="box">👮 Local Police Officers</a>
                     </div>                    
                     <div class="col-md-6">
-                        <a href="{{ url_for('admin_logout') }}" class="box logout">🔓 Logout</a>
+                        <a href="javascript:void(0);" onclick="logoutUser()" class="box logout">🔓 Logout</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
     <script>
+        function logoutUser() {
+            // Clear session storage & local storage
+            sessionStorage.clear();
+            localStorage.clear();
+
+            // Redirect to logout
+            window.location.href = "{{ url_for('admin_logout') }}";
+
+            // Prevent navigating back
+            window.history.pushState(null, "", window.location.href);
+            window.onpopstate = function() {
+                window.history.pushState(null, "", window.location.href);
+                window.location.href = "{{ url_for('admin_login') }}";  // Force redirect to login page
+            };
+        }
+
+        // Ensure the user cannot navigate back after logging out
         window.history.pushState(null, "", window.location.href);
         window.onpopstate = function() {
             window.history.pushState(null, "", window.location.href);
+            window.location.href = "{{ url_for('admin_login') }}";  // Force redirect to login page
+        };
+
+        // Force redirect to login page if the user tries to navigate back
+        window.onload = function() {
+            if (performance.navigation.type === 2) {  // Check if the page is loaded via back/forward navigation
+                window.location.href = "{{ url_for('admin_login') }}";
+            }
         };
     </script>
-    
 </body>
 </html>

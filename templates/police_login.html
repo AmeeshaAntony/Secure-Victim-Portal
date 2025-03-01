@@ -3,13 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Police Login</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='police_login.css') }}">
+    <style>
+        /* Additional CSS for the Welcome button */
+        .welcome-container {
+            text-align: center; /* Center the button horizontally */
+            margin-top: 20px; /* Add some space above the button */
+            position: absolute; /* Position the button at the bottom */
+            bottom: 20px; /* Distance from the bottom */
+            width: 10%; /* Full width to center the button */
+            padding-left: 700px;
+        }
+
+        .welcome-btn {
+            background-color: #4CAF50; /* Green background */
+            color: white; /* White text */
+            padding: 10px 20px; /* Padding */
+            border: none; /* No border */
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer; /* Pointer cursor on hover */
+            font-size: 16px; /* Font size */
+        }
+
+        .welcome-btn:hover {
+            background-color: #45a049; /* Darker green on hover */
+        }
+
+        /* Style for flash messages */
+        .alert {
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .alert-error {
+            color: #721c24; /* Dark red text */
+            background-color: #f8d7da; /* Light red background */
+            border-color: #f5c6cb; /* Red border */
+        }
+    </style>
 </head>
 <body>
     <div class="login-container">
         <h2>Police Officer Login</h2>
-        <form action="#" method="POST">
+
+        <!-- Display flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('police_login') }}" method="POST">
             <input type="text" name="email" placeholder="Enter Email ID" required>
             <input type="password" name="password" placeholder="Enter Password" required>
             <button type="submit">Login</button>
@@ -17,5 +70,19 @@
         <p>Not yet registered? <a href="{{ url_for('police_signup') }}">Sign Up</a></p>
         <a href="{{ url_for('welcome') }}">Back to Home</a>
     </div>
+
+    <!-- Welcome Button at the bottom center of the page -->
+    <div class="welcome-container">
+        <button class="welcome-btn" onclick="window.location.href='{{ url_for('welcome') }}'">Welcome Page</button>
+    </div>
+
+    <script>
+        // Prevent back navigation after logout or login
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = function() {
+            window.history.pushState(null, "", window.location.href);
+            window.location.href = "{{ url_for('police_login') }}";  // Force redirect to login page
+        };
+    </script>
 </body>
 </html>

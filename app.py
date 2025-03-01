@@ -53,40 +53,59 @@ conn.close()
 def init_police_db():
     with sqlite3.connect('police.db') as conn:
         cursor = conn.cursor()
-        
-        # Create the table if it doesn't exist
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS police_officer (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                phone TEXT NOT NULL UNIQUE,
-                email TEXT NOT NULL UNIQUE,
-                password TEXT NOT NULL,
-                state TEXT NOT NULL,
-                district TEXT NOT NULL,
-                position TEXT NOT NULL
-            )
-        ''')
 
-        # Alter table to add new columns if they don't exist
-        try:
-            cursor.execute("ALTER TABLE police_officer ADD COLUMN police_id TEXT UNIQUE")
-        except sqlite3.OperationalError:
-            pass  # Column already exists
+        # Start a transaction
+        cursor.execute("BEGIN")
 
         try:
-            cursor.execute("ALTER TABLE police_officer ADD COLUMN aadhar_card_path TEXT")
-        except sqlite3.OperationalError:
-            pass  # Column already exists
+            # Create the police_officer table if it doesn't exist
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS police_officer (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    phone TEXT NOT NULL UNIQUE,
+                    email TEXT NOT NULL UNIQUE,
+                    password TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    district TEXT NOT NULL,
+                    position TEXT NOT NULL,
+                    police_id TEXT UNIQUE,
+                    aadhar_card_path TEXT
+                )
+            ''')
 
-        conn.commit()
+            # Check if columns exist before adding them
+            cursor.execute("PRAGMA table_info(police_officer)")
+            columns = [column[1] for column in cursor.fetchall()]  # Get column names
+
+            if 'police_id' not in columns:
+                cursor.execute("ALTER TABLE police_officer ADD COLUMN police_id TEXT UNIQUE")
+
+            if 'aadhar_card_path' not in columns:
+                cursor.execute("ALTER TABLE police_officer ADD COLUMN aadhar_card_path TEXT")
+
+            # Create the query table if it doesn't exist
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS query (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    email TEXT NOT NULL,
+                    query_type TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    submission_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+
+            # Commit the transaction
+            conn.commit()
+        except sqlite3.Error as e:
+            # Rollback the transaction in case of an error
+            conn.rollback()
+            print(f"An error occurred: {e}")
+        # No need to close the connection explicitly; the 'with' statement handles it
 
 # Call the function to apply changes
 init_police_db()
-
-
-
-
 
 # Create the database and users table if not exists
 
@@ -238,6 +257,7 @@ init_case_description_db()
 def welcome():
     return render_template('welcome.html')
 
+
 @app.route('/police/home')
 def police_home():
     if 'user_id' not in session:
@@ -248,6 +268,12 @@ def police_home():
 @app.route('/about')
 def about():
     return render_template('police_about.html')
+
+@app.route('/police/logout')
+def police_logout():
+    # Clear the session
+    session.clear()
+    return redirect(url_for('police_login'))
 
 @app.route('/assign_officers')
 def assign_officers():
@@ -619,7 +645,49 @@ def edit_profile():
 
     return render_template("edit_profile.html", user=user)
 
+@app.route('/police_query')
+def police_query():
+    return render_template('police_query.html')
 
+@app.route('/police_notification')
+def police_notification_settings():
+    return render_template('police_notification.html')
+
+def get_db_connection():
+    conn = sqlite3.connect('police.db')
+    conn.row_factory = sqlite3.Row  # Access columns by name
+    return conn
+
+@app.route('/submit_query', methods=['POST'])
+def submit_query():
+    # Get form data
+    name = request.form.get('name')
+    email = request.form.get('email')
+    query_type = request.form.get('query-type')
+    description = request.form.get('description')
+
+    # Validate form data
+    if not name or not email or not query_type or not description:
+        flash("All fields are required!", "error")
+        return redirect(url_for('police_query'))
+
+    # Insert data into the database
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO query (name, email, query_type, description) VALUES (?, ?, ?, ?)",
+            (name, email, query_type, description)
+        )
+        conn.commit()
+        flash("Query submitted successfully!", "success")
+    except sqlite3.Error as e:
+        flash(f"An error occurred: {e}", "error")
+    finally:
+        conn.close()
+
+    # Redirect back to the query form
+    return redirect(url_for('police_query'))
 
 @app.route('/police/logout')
 def logout():
@@ -658,7 +726,7 @@ def admin_login():
         email = request.form['username']  # Assuming 'username' is actually 'email'
         password = request.form['password']
         
-        admin = check_admin(email, password)
+        admin = check_admin(email, password)  # Function to verify admin credentials
         
         if admin:
             session['admin_id'] = admin[0]  # Store admin ID
@@ -666,7 +734,8 @@ def admin_login():
             return redirect(url_for('admin_home'))  # Redirect to Admin Dashboard
         else:
             flash("Invalid email or password.", "danger")
-    
+            return redirect(url_for('admin_login'))  # Show flash message only on failure
+
     return render_template('admin_login.html')
 
 @app.route('/admin/dashboard')
@@ -752,6 +821,14 @@ def no_cache(view):
         response.headers['Expires'] = '-1'
         return response
     return wrapped_view
+
+@app.after_request
+def add_no_cache_headers(response):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
 @app.route("/admin_home")
 def admin_home():
     if "admin_id" not in session:
@@ -763,11 +840,11 @@ def admin_home():
 
 @app.route('/admin/logout')
 def admin_logout():
-    session.clear()  # Clear all session data
-    response = make_response(redirect(url_for('admin_login')))  # Redirect to login
+    session.clear()  # Clear session
+    response = redirect(url_for('admin_login'))
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '-1'
+    response.headers['Expires'] = '0'
     return response
 
 def get_police_officers():
