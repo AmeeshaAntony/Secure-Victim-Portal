@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 import re
 from flask_bcrypt import Bcrypt
+from psutil import users
 from werkzeug.utils import secure_filename
 import bcrypt
 from flask_sqlalchemy import SQLAlchemy
@@ -13,9 +14,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
 app.secret_key = "your_secret_key"  # Required for flash messages
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/users.db'
 SECRET_KEY = "crime"  # Set the correct decryption key
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
 
+db = SQLAlchemy(app)
 
 def get_case(case_number):
     """Fetch case details from the database using case number."""
@@ -31,24 +34,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Ensure upload folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-conn = sqlite3.connect('user.db')
-cursor = conn.cursor()
 
-# Create users table
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        fullname TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        phone TEXT NOT NULL,
-        location TEXT NOT NULL,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL
-    )
-''')
-
-conn.commit()
-conn.close()
 # Initialize `police.db` for police officer management
 def init_police_db():
     with sqlite3.connect('police.db') as conn:
@@ -248,6 +234,28 @@ conn.close()
 
 print("Database and table created successfully!")
 
+conn = sqlite3.connect('user.db')
+cursor = conn.cursor()
+
+# Create the users table
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fullname TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    phone TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    aadhar TEXT NOT NULL UNIQUE,
+    state TEXT NOT NULL,
+    district TEXT NOT NULL,
+    police_station TEXT NOT NULL,
+    aadhar_card_filename TEXT NOT NULL
+)
+''')
+
+# Commit changes and close the connection
+conn.commit()
+conn.close()
 # Call functions to initialize databases
 init_police_db()
 init_cases_db()
@@ -968,32 +976,97 @@ def update_security_settings():
     print("Received security settings update:", officer_actions)  # Debugging output
     return redirect(url_for('admin_settings', section='security'))
 
-
-@app.route('/user')
+def get_db_connection():
+    conn = sqlite3.connect('user.db')
+    conn.row_factory = sqlite3.Row  # Access columns by name
+    return conn
+    
+@app.route('/user_login', methods=['GET', 'POST'])
 def user_login():
-    return render_template('user_login.html') 
+    if request.method == 'POST':
+        # Access form data
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        if not email or not password:
+            flash('Email and password are required!', 'error')
+            return redirect(url_for('user_login'))
+
+        # Debugging: Print form data
+        print(f"Email: {email}, Password: {password}")
+
+        # Check credentials in the database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM users WHERE email = ? AND password = ?', (email, password))
+        user = cursor.fetchone()
+        conn.close()
+
+        if user:
+            # Store user data in session
+            session['user_id'] = user['id']
+            session['email'] = user['email']
+            session['fullname'] = user['fullname']
+            return redirect(url_for('user_home'))  # Redirect to user home page
+        else:
+            flash('Invalid email or password!', 'error')
+            return redirect(url_for('user_login'))
+
+    return render_template('user_login.html')
+
+@app.route('/user_home')
+def user_home():
+    # Check if the user is logged in
+    if 'user_id' not in session:
+        flash('Please login to access this page!', 'error')
+        return redirect(url_for('user_login'))
+
+    # Fetch user details from the session
+    user_id = session['user_id']
+    email = session['email']
+    fullname = session['fullname']
+
+    return render_template('user_home.html', fullname=fullname, email=email)
+
 
 @app.route('/user_signup', methods=['GET', 'POST'])
 def user_signup():
     if request.method == 'POST':
-        username = request.form['username']
+        # Get form data
+        fullname = request.form['fullname']
         email = request.form['email']
+        phone = request.form['phone']
         password = request.form['password']
-        confirm_password = request.form['confirm_password']
+        aadhar = request.form['aadhar']
+        state = request.form['state']
+        district = request.form['district']
+        police_station = request.form['police_station']
 
-        if password != confirm_password:
-            return render_template('user_signup.html', error="Passwords do not match!")
+        # Handle file upload
+        aadhar_card = request.files['aadhar_card']
+        aadhar_card_filename = None
+        if aadhar_card:
+            aadhar_card_filename = os.path.join(app.config['UPLOAD_FOLDER'], aadhar_card.filename)
+            aadhar_card.save(aadhar_card_filename)
 
-        # Hash the password before storing (Replace this with DB logic)
-        hashed_password = generate_password_hash(password)
+        # Insert data into the database
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO users (fullname, email, phone, password, aadhar, state, district, police_station, aadhar_card_filename)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (fullname, email, phone, password, aadhar, state, district, police_station, aadhar_card_filename))
+            conn.commit()
+            flash('Signup successful! Please login.', 'success')
+        except sqlite3.IntegrityError:
+            flash('Email, phone, or Aadhar number already exists!', 'error')
+        finally:
+            conn.close()
 
-        # Store the new user in a database (Example code, replace with actual DB logic)
-        users[username] = {"email": email, "password": hashed_password}
-
-        return redirect(url_for('user_login'))
+        return redirect(url_for('user_signup'))
 
     return render_template('user_signup.html')
-    
 
 if __name__ == '__main__':
     app.run(debug=True)

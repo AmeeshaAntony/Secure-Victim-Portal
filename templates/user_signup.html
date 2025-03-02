@@ -3,206 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Victim Portal - User Signup</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: linear-gradient(to right, #141e30, #243b55);
-            color: white;
-        }
-        .signup-container {
-            width: 450px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
-            padding: 30px;
-        }
-        .signup-form h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: cyan;
-        }
-        .input-group {
-            margin-bottom: 15px;
-        }
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: cyan;
-        }
-        .input-group input,
-        .input-group select {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            background: #1f1f1f;
-            color: white;
-        }
-        .error-message {
-            color: red;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-        .signup-btn {
-            width: 100%;
-            padding: 10px;
-            background: cyan;
-            border: none;
-            color: black;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .signup-btn:hover {
-            background: #00cccc;
-        }
-        .login-link {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-        }
-        .login-link a {
-            text-decoration: none;
-            color: cyan;
-        }
-        /* Flash Message Styling */
-        .flash-message {
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 14px;
-            padding: 8px;
-            border-radius: 5px;
-        }
-        .flash-success {
-            background-color: #28a745;
-            color: white;
-        }
-        .flash-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-    </style>
+    <title>User Signup</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='user_signup.css') }}">
 </head>
 <body>
-    <div class="signup-container">
-        <div class="signup-form">
-            <h2>User Sign Up</h2>
-
-            <!-- Flash Messages from Flask -->
+    <div class="container">
+        <div class="signup-box">
+            <h2>User Signup</h2>
+            <!-- Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                    <div class="{{ category }}">{{ message }}</div>
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
 
-            <form id="signupForm" action="{{ url_for('user_signup') }}" method="POST" onsubmit="return validateSignup()">
+            <form id="signupForm" action="/user_signup" method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
+                <!-- Full Name -->
                 <div class="input-group">
-                    <label for="fullname">Full Name</label>
-                    <input type="text" id="fullname" name="fullname" placeholder="Enter your full name">
-                    <div id="nameError" class="error-message"></div>
+                    <label for="fullname">Full Name:</label>
+                    <input type="text" id="fullname" name="fullname" required>
                 </div>
+
+                <!-- Email -->
                 <div class="input-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" placeholder="Enter your email">
-                    <div id="emailError" class="error-message"></div>
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
                 </div>
+
+                <!-- Phone -->
                 <div class="input-group">
-                    <label for="phone">Phone Number</label>
-                    <input type="text" id="phone" name="phone" placeholder="Enter your phone number">
-                    <div id="phoneError" class="error-message"></div>
+                    <label for="phone">Phone Number:</label>
+                    <input type="tel" id="phone" name="phone" pattern="[0-9]{10}" required>
+                    <small>Format: 10 digits (e.g., 9876543210)</small>
                 </div>
+
+                <!-- Password -->
                 <div class="input-group">
-                    <label for="location">Location</label>
-                    <select id="location" name="location">
-                        <option value="">Select your city</option>
-                        <option value="Mumbai">Mumbai</option>
-                        <option value="Delhi">Delhi</option>
-                        <option value="Bangalore">Bangalore</option>
-                        <option value="Kolkata">Kolkata</option>
-                        <option value="Chennai">Chennai</option>
-                        <option value="Hyderabad">Hyderabad</option>
-                        <option value="Pune">Pune</option>
-                        <option value="Other">Other</option>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="input-group">
+                    <label for="confirm_password">Confirm Password:</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required>
+                </div>
+
+                <!-- Aadhar Number -->
+                <div class="input-group">
+                    <label for="aadhar">Aadhar Number:</label>
+                    <input type="text" id="aadhar" name="aadhar" pattern="[0-9]{12}" required>
+                    <small>Must be 12 digits</small>
+                </div>
+
+                <!-- Upload Aadhar Card -->
+                <div class="input-group">
+                    <label for="aadhar_card">Upload Aadhar Card (PDF/Image):</label>
+                    <input type="file" id="aadhar_card" name="aadhar_card" accept=".pdf,.jpg,.jpeg,.png" required>
+                </div>
+
+                <!-- State Dropdown -->
+                <div class="input-group">
+                    <label for="state">State:</label>
+                    <select id="state" name="state" required>
+                        <option value="">Select State</option>
+                        <option value="State1">State 1</option>
+                        <option value="State2">State 2</option>
+                        <!-- Add more states as needed -->
                     </select>
-                    <div id="locationError" class="error-message"></div>
                 </div>
+
+                <!-- District Dropdown -->
                 <div class="input-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" placeholder="Choose a username">
-                    <div id="usernameError" class="error-message"></div>
+                    <label for="district">District:</label>
+                    <select id="district" name="district" required>
+                        <option value="">Select District</option>
+                        <option value="District1">District 1</option>
+                        <option value="District2">District 2</option>
+                        <!-- Add more districts as needed -->
+                    </select>
                 </div>
+
+                <!-- Nearest Police Station -->
                 <div class="input-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" placeholder="Create a password">
-                    <div id="passwordError" class="error-message"></div>
+                    <label for="police_station">Nearest Police Station:</label>
+                    <input type="text" id="police_station" name="police_station" required>
                 </div>
-                
-                <button type="submit" class="signup-btn">Sign Up</button>
+
+                <!-- Submit Button -->
+                <button type="submit">Sign Up</button>
             </form>
-            <div class="login-link">
-                Already have an account? <a href="{{ url_for('user_login') }}">Login</a>
-            </div>
+            <p>Already registered? <a href="/user_login">Login</a></p>
         </div>
     </div>
 
     <script>
-        function validateSignup() {
-            let fullname = document.getElementById("fullname").value.trim();
-            let email = document.getElementById("email").value.trim();
-            let phone = document.getElementById("phone").value.trim();
-            let location = document.getElementById("location").value;
-            let username = document.getElementById("username").value.trim();
-            let password = document.getElementById("password").value;
-            let confirmPassword = document.getElementById("confirm-password").value;
-
-            let isValid = true;
-
-            document.querySelectorAll(".error-message").forEach(el => el.innerText = "");
-
-            if (!fullname) {
-                document.getElementById("nameError").innerText = "Full name is required.";
-                isValid = false;
-            }
-            if (!/^\S+@\S+\.\S+$/.test(email)) {
-                document.getElementById("emailError").innerText = "Enter a valid email.";
-                isValid = false;
-            }
-            if (!/^\d{10}$/.test(phone)) {
-                document.getElementById("phoneError").innerText = "Enter a valid 10-digit phone number.";
-                isValid = false;
-            }
-            if (!location) {
-                document.getElementById("locationError").innerText = "Please select a location.";
-                isValid = false;
-            }
-            if (username.length < 4) {
-                document.getElementById("usernameError").innerText = "Username must be at least 4 characters.";
-                isValid = false;
-            }
-            if (!/(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}/.test(password)) {
-                document.getElementById("passwordError").innerText = "Password must include uppercase, number, special character.";
-                isValid = false;
-            }
+        function validateForm() {
+            // Password and Confirm Password Validation
+            const password = document.getElementById("password").value;
+            const confirmPassword = document.getElementById("confirm_password").value;
             if (password !== confirmPassword) {
-                document.getElementById("confirmPasswordError").innerText = "Passwords do not match.";
-                isValid = false;
+                alert("Passwords do not match!");
+                return false;
             }
-            return isValid;
+
+            // Aadhar Number Validation
+            const aadhar = document.getElementById("aadhar").value;
+            if (aadhar.length !== 12 || isNaN(aadhar)) {
+                alert("Aadhar number must be exactly 12 digits!");
+                return false;
+            }
+
+            // Phone Number Validation
+            const phone = document.getElementById("phone").value;
+            if (phone.length !== 10 || isNaN(phone)) {
+                alert("Phone number must be exactly 10 digits!");
+                return false;
+            }
+
+            return true; // Form will submit if all validations pass
         }
     </script>
 </body>

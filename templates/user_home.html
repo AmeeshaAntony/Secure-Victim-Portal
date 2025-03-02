@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Victim Portal - Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            background-image: url('{{ url_for("static", filename="user_home.jpg") }}');
+            color: rgb(15, 0, 0);
+            text-align: center;
+            position: center;
+            background-size: cover;
+        }
+        body::before { 
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .container {
+            width: 100%;
+            padding: 50px 20px;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: cyan;
+        }
+        .navbar a {
+            color: cyan;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2); /* Colored background */
+            border-radius: 5px; /* Rounded corners */
+            margin: 0 5px; /* Spacing between buttons */
+            transition: background 0.3s ease; /* Smooth transition for hover effect */
+        }
+        .navbar a:hover {
+            background: cyan; /* Hover background color */
+            color: black; /* Hover text color */
+        }
+        .hero {
+            margin-top: 50px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .hero h1 {
+            font-size: 50px;
+            margin-bottom: 20px;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+        .hero p {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="userhome.html">Home</a>
+        <a href="useralert.html">Alert</a>
+        <a href="usersetting.html">Settings</a>
+        <a href="userlogout.html">Logout</a>
+    </div>
+    <div class="container">
+       
+    </div>
+</body>
+</html>
