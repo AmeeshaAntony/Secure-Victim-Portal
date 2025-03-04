@@ -1001,6 +1001,9 @@ def get_db_connection():
     
 @app.route('/user_login', methods=['GET', 'POST'])
 def user_login():
+    if 'user_id' in session:  # If user is already logged in, redirect to home
+        return redirect(url_for('user_home'))
+    
     if request.method == 'POST':
         # Access form data
         email = request.form.get('email')
