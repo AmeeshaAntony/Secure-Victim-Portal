@@ -1,0 +1,102 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background: linear-gradient(to right, #141e30, #243b55);
+    color: white;
+    text-align: center;
+}
+
+.navbar {
+    display: flex;
+    justify-content: center;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.navbar a {
+    color: cyan;
+    text-decoration: none;
+    padding: 10px 15px;
+    margin: 0 10px;
+}
+
+.navbar a:hover, .navbar a.active {
+    background: cyan;
+    color: black;
+    border-radius: 5px;
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+}
+
+h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+.help-section {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px cyan;
+}
+
+.help-section h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: cyan;
+}
+
+.help-section p {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.text-center {
+    margin-top: 20px;
+}
+
+.btn {
+    display: inline-block;
+    background: cyan;
+    color: black;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.btn:hover {
+    background: white;
+    color: black;
+}
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: cyan;
+}
+.navbar a {
+    color: cyan;
+    text-decoration: none;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.2); /* Colored background */
+    border-radius: 5px; /* Rounded corners */
+    margin: 0 5px; /* Spacing between buttons */
+    transition: background 0.3s ease; /* Smooth transition for hover effect */
+}
+.navbar a:hover {
+    background: cyan; /* Hover background color */
+    color: black; /* Hover text color */
+}

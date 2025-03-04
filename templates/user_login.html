@@ -40,5 +40,15 @@
             <p>Not registered? <a href="/user_signup">Sign up</a></p>
         </div>
     </div>
+    <script>
+        if (sessionStorage.getItem("loggedIn")) {
+            window.location.href = "{{ url_for('user_home') }}";
+        }
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.go(1);
+        };
+    </script>
+    
 </body>
 </html>

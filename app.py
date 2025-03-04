@@ -254,8 +254,26 @@ CREATE TABLE IF NOT EXISTS users (
 ''')
 
 # Commit changes and close the connection
-conn.commit()
-conn.close()
+def create_alert_table():
+    conn = sqlite3.connect('user.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_alert (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            name TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            location TEXT NOT NULL,
+            district TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+create_alert_table()
+print("✅ user_alert table created successfully!")
 # Call functions to initialize databases
 init_police_db()
 init_cases_db()
@@ -1067,6 +1085,131 @@ def user_signup():
         return redirect(url_for('user_signup'))
 
     return render_template('user_signup.html')
+
+@app.route('/user_alert')
+def user_alert():
+    return render_template('user_alert.html')
+
+@app.route('/user_settings', methods=['GET', 'POST'])
+def user_settings():
+    if 'user_id' not in session:
+        return redirect(url_for('user_login'))  # Redirect to login if not authenticated
+
+    user_id = session['user_id']
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Fetch user details
+    cursor.execute("SELECT * FROM users WHERE id=?", (user_id,))
+    user = cursor.fetchone()
+
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        password = request.form.get('password')
+
+        try:
+            if password:  # If the user wants to update the password
+                hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+                cursor.execute("UPDATE users SET name=?, email=?, phone=?, password=? WHERE id=?",
+                               (name, email, phone, hashed_password, user_id))
+            else:
+                cursor.execute("UPDATE users SET name=?, email=?, phone=? WHERE id=?",
+                               (name, email, phone, user_id))
+
+            conn.commit()
+            flash("✅ Settings updated successfully!", "success")
+
+        except sqlite3.IntegrityError:
+            flash("⚠️ Email or Phone already exists!", "danger")
+
+        conn.close()
+        return redirect(url_for('user_settings'))  # Reload the settings page
+
+    return render_template('user_settings.html', user=user)
+
+
+@app.route('/user_logout')
+def user_logout():
+    session.clear()  # Clear user session
+    flash("You have been logged out.", "info")
+    return redirect(url_for('user_login'))
+
+@app.route('/send_alert', methods=['POST'])
+def send_alert():
+    if 'user_id' not in session:
+        return jsonify({"message": "User not logged in"}), 403
+
+    data = request.get_json()
+    location = data.get('location')
+    district = data.get('district')
+
+    if not location or not district:
+        return jsonify({"message": "Location and district are required"}), 400
+
+    try:
+        # Get user details
+        conn = sqlite3.connect("user.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT fullname, phone FROM users WHERE id = ?", (session['user_id'],))
+        user = cursor.fetchone()
+
+        if not user:
+            conn.close()
+            return jsonify({"message": "User not found"}), 404
+
+        user_name, user_phone = user
+
+        # ✅ Create `user_alert` table if it doesn't exist
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_alert (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                name TEXT NOT NULL,
+                phone TEXT NOT NULL,
+                location TEXT NOT NULL,
+                district TEXT NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        ''')
+
+        # ✅ Save the alert to the `user_alert` table
+        cursor.execute("INSERT INTO user_alert (user_id, name, phone, location, district) VALUES (?, ?, ?, ?, ?)",
+                       (session['user_id'], user_name, user_phone, location, district))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Alert saved successfully!"})
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"message": "Internal server error"}), 500
+    
+@app.route('/user_case_status')
+def user_case_status():
+    if 'user_id' not in session:
+        flash("Please log in first!", "danger")
+        return redirect(url_for('user_login'))
+
+    user_name = session.get('fullname')  # Get logged-in user's name
+
+    conn = sqlite3.connect("cases.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT case_number FROM cases WHERE reported_person = ?", (user_name,))
+    user_cases = cursor.fetchall()
+    conn.close()
+
+    return render_template("user_case_status.html", cases=user_cases)
+
+@app.route('/user_help')
+def user_help():
+    if 'user_id' not in session:
+        return redirect(url_for('user_login'))  # Redirect to login if not logged in
+    return render_template('user_help.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

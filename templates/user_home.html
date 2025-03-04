@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Secure Victim Portal - Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
@@ -74,13 +77,21 @@
 </head>
 <body>
     <div class="navbar">
-        <a href="userhome.html">Home</a>
-        <a href="useralert.html">Alert</a>
+        <a href="{{ url_for('user_alert') }}" class="btn alert-btn">Send Alert</a>
+        <a href="{{ url_for('user_case_status') }}">Case Status</a>
         <a href="usersetting.html">Settings</a>
-        <a href="userlogout.html">Logout</a>
+        <a href="{{ url_for('user_help') }}">Help</a>
+        <a href="{{ url_for('user_logout') }}">Logout</a>
     </div>
     <div class="container">
        
     </div>
+    <script>
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.go(1);
+        };
+    </script>
+    
 </body>
 </html>

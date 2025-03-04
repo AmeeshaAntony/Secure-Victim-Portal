@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Victim Portal - Help</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='user_help.css') }}">
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{ url_for('user_alert') }}" class="btn alert-btn">Send Alert</a>
+        <a href="{{ url_for('user_case_status') }}">Case Status</a>
+        <a href="usersetting.html">Settings</a>
+        <a href="{{ url_for('user_help') }}">Help</a>
+        <a href="{{ url_for('user_logout') }}">Logout</a>
+    </div>
+
+    <div class="container">
+        <h2>📌 Help & Support</h2>
+        
+        <div class="help-section">
+            <h3>🚨 Emergency Assistance</h3>
+            <p><strong>How to Send an Alert?</strong> Click on "Send Alert" and enter your location & district.</p>
+            <p><strong>The police officers will contact you shortly</strong></p>
+        </div>
+
+        <div class="help-section">
+            <h3>📂 Case Management</h3>
+            <p><strong>How to Track Your Case?</strong> Click on "Case Status" to view your reported cases.</p>
+        </div>
+
+        <div class="help-section">
+            <h3>🔐 Account & Security</h3>
+            <p><strong>How to Reset Password?</strong> Go to "Settings" and click "Reset Password".</p>
+            <p><strong>How to Update Personal Details?</strong> Modify your phone or email from "Settings".</p>
+        </div>
+
+        <div class="help-section">
+            <h3>🔎 Portal Navigation</h3>
+            <p><strong>How to Use the Portal?</strong> Explore different sections like alerts, cases, and settings.</p>
+            <p><strong>Understanding Role-Based Access?</strong> Only authorized officers can access sensitive data.</p>
+        </div>
+
+        <div class="help-section">
+            <h3>🔒 Privacy & Security</h3>
+            <p><strong>How is My Data Protected?</strong> We use encryption to secure your information.</p>
+            <p><strong>Who Can Access My Case Details?</strong> Only officers with clearance can view case details.</p>
+        </div>
+
+        <div class="help-section">
+            <h3>❓ FAQs</h3>
+            <p><strong>Can I edit a case after submission?</strong> No, but you can contact an officer for corrections.</p>
+            <p><strong>What if I enter the wrong details?</strong> Contact support to rectify the issue.</p>
+        </div>
+
+        <div class="help-section">
+            <h3>📞 Contact Support</h3>
+            <p><strong>Live Chat Support:</strong> Available from 9 AM - 6 PM.</p>
+            <p><strong>Email Support:</strong> support@victimportal.com</p>
+            <p><strong>Feedback Form:</strong> Click <a href="#">here</a> to submit feedback.</p>
+        </div>
+
+        <div class="text-center">
+            <a href="{{ url_for('user_home') }}" class="btn"> Back to Home</a>
+        </div>
+    </div>
+</body>
+</html>

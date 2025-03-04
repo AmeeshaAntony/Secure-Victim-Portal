@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Victim Portal - Alert</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: white;
+            text-align: center;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 500px;
+            background: #0a0a0a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px cyan;
+            text-align: center;
+        }
+        .navbar {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+        }
+        .navbar a {
+            color: cyan;
+            text-decoration: none;
+            padding: 10px 20px;
+        }
+        .navbar a:hover {
+            background: cyan;
+            color: black;
+            border-radius: 5px;
+        }
+        .alert-box p {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: white;
+        }
+        .alert-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            background: red;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 0 10px red;
+        }
+        .alert-btn:hover {
+            background: darkred;
+            box-shadow: 0 0 20px red;
+        }
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            color: black;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+        }
+        .modal-content select, .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid gray;
+            border-radius: 5px;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        .modal-buttons button {
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .cancel-btn {
+            background: gray;
+            color: white;
+        }
+        .submit-btn {
+            background: green;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{ url_for('user_alert') }}" class="btn alert-btn">Send Alert</a>
+        <a href="{{ url_for('user_case_status') }}">Case Status</a>
+        <a href="usersetting.html">Settings</a>
+        <a href="{{ url_for('user_help') }}">Help</a>
+        <a href="{{ url_for('user_logout') }}">Logout</a>
+    </div>
+
+    <div class="container">
+        <div class="alert-box">
+            <p>⚠ Warning! Pressing the button will send an emergency alert.</p>
+            <button class="alert-btn" onclick="showPopup()">Send Alert</button>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alertModal" class="modal">
+        <div class="modal-content">
+            <h3>Enter Alert Details</h3>
+            <input type="text" id="location" placeholder="Enter Your Location" required>
+            <select id="district" required>
+                <option value="" disabled selected>Select District</option>
+                <option value="Ernakulam">Ernakulam</option>
+                <option value="Thrissur">Thrissur</option>
+                <option value="Kozhikode">Kozhikode</option>
+            </select>
+            <div class="modal-buttons">
+                <button class="cancel-btn" onclick="closePopup()">Cancel</button>
+                <button class="submit-btn" onclick="sendAlert()">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPopup() {
+            document.getElementById("alertModal").style.display = "flex";
+        }
+
+        function closePopup() {
+            document.getElementById("alertModal").style.display = "none";
+        }
+
+        function sendAlert() {
+            let location = document.getElementById("location").value;
+            let district = document.getElementById("district").value;
+
+            if (!location || !district) {
+                alert("Please enter both location and district.");
+                return;
+            }
+
+            fetch('/send_alert', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ location: location, district: district })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                closePopup();
+                window.location.href = "/user_home";  // Redirect to home
+            })
+            .catch(error => {
+                alert("Error sending alert! Please try again.");
+                console.error(error);
+            });
+        }
+    </script>
+</body>
+</html>
