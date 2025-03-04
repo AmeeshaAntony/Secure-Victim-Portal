@@ -253,6 +253,15 @@ CREATE TABLE IF NOT EXISTS users (
 )
 ''')
 
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS feedback (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_name TEXT NOT NULL,
+        feedback TEXT NOT NULL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+''')
+
 # Commit changes and close the connection
 def create_alert_table():
     conn = sqlite3.connect('user.db')
@@ -1213,6 +1222,36 @@ def user_help():
         return redirect(url_for('user_login'))  # Redirect to login if not logged in
     return render_template('user_help.html')
 
+@app.route('/submit_feedback', methods=['POST'])
+def submit_feedback():
+    if 'user_id' not in session:
+        return jsonify({"message": "User not logged in"}), 403
+
+    data = request.json
+    feedback_text = data.get('feedback')
+
+    # Get the user's name from the session
+    conn = sqlite3.connect("user.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT fullname FROM users WHERE id = ?", (session['user_id'],))
+    user = cursor.fetchone()
+    conn.close()
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    user_name = user[0]
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Save feedback to user.db
+    conn = sqlite3.connect("user.db")
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO feedback (user_name, feedback, timestamp) VALUES (?, ?, ?)", 
+                   (user_name, feedback_text, timestamp))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Feedback submitted successfully!"})
 
 if __name__ == '__main__':
     app.run(debug=True)

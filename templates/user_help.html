@@ -58,12 +58,48 @@
             <h3>📞 Contact Support</h3>
             <p><strong>Live Chat Support:</strong> Available from 9 AM - 6 PM.</p>
             <p><strong>Email Support:</strong> support@victimportal.com</p>
-            <p><strong>Feedback Form:</strong> Click <a href="#">here</a> to submit feedback.</p>
+            <p><strong>Feedback Form:</strong> Click <a href="#" onclick="openFeedbackForm()">here</a> to submit feedback.</p>
         </div>
 
         <div class="text-center">
             <a href="{{ url_for('user_home') }}" class="btn"> Back to Home</a>
         </div>
     </div>
+    <div class="feedback-popup" id="feedbackForm">
+        <span class="close-btn" onclick="closeFeedbackForm()">✖</span>
+        <h3>Submit Your Feedback</h3>
+        <form id="feedbackFormData">
+            <textarea id="feedbackText" placeholder="Write your feedback here..."></textarea>
+            <button type="button" onclick="submitFeedback()">Submit</button>
+        </form>
+    </div>
+    <script>
+        function openFeedbackForm() {
+            document.getElementById("feedbackForm").style.display = "block";
+        }
+
+        function closeFeedbackForm() {
+            document.getElementById("feedbackForm").style.display = "none";
+        }
+
+        function submitFeedback() {
+            let feedbackText = document.getElementById("feedbackText").value;
+
+            fetch('/submit_feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ feedback: feedbackText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);  // Show success message
+                closeFeedbackForm();  // Close popup after submission
+            })
+            .catch(error => {
+                alert("Error submitting feedback! Please try again.");
+                console.error(error);
+            });
+        }
+    </script>
 </body>
 </html>

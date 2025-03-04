@@ -100,3 +100,44 @@ h2 {
     background: cyan; /* Hover background color */
     color: black; /* Hover text color */
 }
+
+.feedback-popup {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px gray;
+    text-align: center;
+}
+.feedback-popup textarea {
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+    margin-top: 10px;
+}
+.feedback-popup button {
+    margin-top: 10px;
+    padding: 10px;
+    background: blue;
+    color: white;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 5px;
+}
+.feedback-popup button:hover {
+    background: darkblue;
+}
+.close-btn {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 18px;
+    color: red;
+}
