@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Victim Portal - Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+        .navbar {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 0;
+        }
+        .navbar a {
+            color: cyan;
+            text-decoration: none;
+            padding: 10px 25px;
+            margin: 0 15px;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .navbar a:hover {
+            background: cyan;
+            color: black;
+            border-radius: 5px;
+        }
+        .container {
+            margin-top: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .settings-box {
+            width: 300px;
+            padding: 20px;
+            margin: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 0 10px cyan;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .settings-box:hover {
+            box-shadow: 0 0 20px cyan;
+        }
+        .settings-box i {
+            font-size: 40px;
+            color: cyan;
+            margin-bottom: 10px;
+        }
+        .settings-box h3 {
+            color: cyan;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{ url_for('user_home') }}">Home</a>
+        <a href="{{ url_for('user_alert') }}">Alert</a>
+        <a href="{{ url_for('user_settings') }}">Settings</a>
+        <a href="{{ url_for('user_logout') }}">Logout</a>
+    </div>
+    <div class="container">
+        <div class="settings-box" onclick="navigateTo('{{ url_for('user_update_profile') }}')">
+            <i class="fas fa-user-edit"></i>
+            <h3>Update Profile</h3>
+        </div>
+        <div class="settings-box" onclick="navigateTo('{{ url_for('security_settings') }}')">
+            <i class="fas fa-shield-alt"></i>
+            <h3>Adjust Security Settings</h3>
+        </div>
+    </div>
+
+    <script>
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+    </script>
+</body>
+</html>

@@ -130,3 +130,25 @@ button:hover {
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+.welcome-container {
+    text-align: center; /* Center the button horizontally */
+    margin-top: 20px; /* Add some space above the button */
+    position: absolute; /* Position the button at the bottom */
+    bottom: 20px; /* Distance from the bottom */
+    width: 10%; /* Full width to center the button */
+    padding-left: 150px;
+}
+
+.welcome-btn {
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    padding: 10px 20px; /* Padding */
+    border: none; /* No border */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    font-size: 16px; /* Font size */
+}
+
+.welcome-btn:hover {
+    background-color: #45a049; /* Darker green on hover */
+}

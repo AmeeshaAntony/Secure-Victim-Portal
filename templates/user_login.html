@@ -39,6 +39,9 @@
             </form>
             <p>Not registered? <a href="/user_signup">Sign up</a></p>
         </div>
+        <div class="welcome-container">
+            <button class="welcome-btn" onclick="window.location.href='{{ url_for('welcome') }}'">Welcome Page</button>
+        </div>
     </div>
     <script>
         if (sessionStorage.getItem("loggedIn")) {

@@ -1102,46 +1102,6 @@ def user_signup():
 def user_alert():
     return render_template('user_alert.html')
 
-@app.route('/user_settings', methods=['GET', 'POST'])
-def user_settings():
-    if 'user_id' not in session:
-        return redirect(url_for('user_login'))  # Redirect to login if not authenticated
-
-    user_id = session['user_id']
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Fetch user details
-    cursor.execute("SELECT * FROM users WHERE id=?", (user_id,))
-    user = cursor.fetchone()
-
-    if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        phone = request.form.get('phone')
-        password = request.form.get('password')
-
-        try:
-            if password:  # If the user wants to update the password
-                hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-                cursor.execute("UPDATE users SET name=?, email=?, phone=?, password=? WHERE id=?",
-                               (name, email, phone, hashed_password, user_id))
-            else:
-                cursor.execute("UPDATE users SET name=?, email=?, phone=? WHERE id=?",
-                               (name, email, phone, user_id))
-
-            conn.commit()
-            flash("✅ Settings updated successfully!", "success")
-
-        except sqlite3.IntegrityError:
-            flash("⚠️ Email or Phone already exists!", "danger")
-
-        conn.close()
-        return redirect(url_for('user_settings'))  # Reload the settings page
-
-    return render_template('user_settings.html', user=user)
-
 
 @app.route('/user_logout')
 def user_logout():
@@ -1252,6 +1212,48 @@ def submit_feedback():
     conn.close()
 
     return jsonify({"message": "Feedback submitted successfully!"})
+
+
+@app.route('/user_settings')
+def user_settings():
+    return render_template('user_settings.html')
+
+@app.route('/user_update_profile', methods=['GET', 'POST'])
+def user_update_profile():
+    if 'user_id' not in session:
+        flash("Please log in first.", "danger")
+        return redirect(url_for('user_login'))
+
+    conn = sqlite3.connect("user.db")
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        fullname = request.form.get('name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        location = request.form.get('location')
+
+        cursor.execute("""
+            UPDATE users
+            SET fullname = ?, email = ?, phone = ?
+            WHERE id = ?
+        """, (fullname, email, phone, session['user_id']))
+        conn.commit()
+        flash("Profile updated successfully!", "success")
+        return redirect(url_for('user_home'))
+
+    # Fetch user details
+    cursor.execute("SELECT fullname, email, phone FROM users WHERE id = ?", (session['user_id'],))
+    user = cursor.fetchone()
+    conn.close()
+
+    return render_template('user_update_profile.html', user={'fullname': user[0], 'email': user[1], 'phone': user[2]})
+
+
+@app.route('/security_settings')
+def security_settings():
+    return render_template('security_settings.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

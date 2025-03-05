@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .profile-container {
+            background: #0a0a0a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px cyan;
+            width: 400px;
+            text-align: center;
+        }
+        .profile-container img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+        .profile-container input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+        }
+        .update-btn {
+            background: cyan;
+            color: black;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .update-btn:hover {
+            background: white;
+        }
+        .home-btn {
+            margin-top: 20px;
+            background: transparent;
+            color: cyan;
+            border: 2px solid cyan;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .home-btn:hover {
+            background: cyan;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <h2>Update Profile</h2>
+        
+        <form action="{{ url_for('user_update_profile') }}" method="POST">
+            <input type="text" name="name" placeholder="Full Name" value="{{ user.fullname }}" required>
+            <input type="email" name="email" placeholder="Email" value="{{ user.email }}" required>
+            <input type="tel" name="phone" placeholder="Mobile Number" value="{{ user.phone }}" required>
+            <button class="update-btn" type="submit">Update Profile</button>
+        </form>
+    </div>
+    <a href="{{ url_for('user_home') }}" class="home-btn">Return to Home Page</a>
+</body>
+</html>
