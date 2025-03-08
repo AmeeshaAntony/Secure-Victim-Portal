@@ -278,6 +278,8 @@ def create_alert_table():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
+
+    #cursor.execute("ALTER TABLE user_alert ADD COLUMN status TEXT DEFAULT 'Active'")
     conn.commit()
     conn.close()
 
@@ -1122,14 +1124,14 @@ def send_alert():
         return jsonify({"message": "Location and district are required"}), 400
 
     try:
-        # Get user details
         conn = sqlite3.connect("user.db")
         cursor = conn.cursor()
+
+        # Get user details
         cursor.execute("SELECT fullname, phone FROM users WHERE id = ?", (session['user_id'],))
         user = cursor.fetchone()
 
         if not user:
-            conn.close()
             return jsonify({"message": "User not found"}), 404
 
         user_name, user_phone = user
@@ -1143,22 +1145,26 @@ def send_alert():
                 phone TEXT NOT NULL,
                 location TEXT NOT NULL,
                 district TEXT NOT NULL,
+                status TEXT DEFAULT 'Active',  -- Added Status Column
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         ''')
 
-        # ✅ Save the alert to the `user_alert` table
-        cursor.execute("INSERT INTO user_alert (user_id, name, phone, location, district) VALUES (?, ?, ?, ?, ?)",
+        # ✅ Save the alert to `user_alert` table with status as "Active"
+        cursor.execute("INSERT INTO user_alert (user_id, name, phone, location, district, status) VALUES (?, ?, ?, ?, ?, 'Active')",
                        (session['user_id'], user_name, user_phone, location, district))
-        conn.commit()
-        conn.close()
 
+        conn.commit()
         return jsonify({"message": "Alert saved successfully!"})
 
     except Exception as e:
         print("Error:", e)
         return jsonify({"message": "Internal server error"}), 500
+
+    finally:
+        conn.close()  # Ensuring the connection is closed properly
+
     
 @app.route('/user_case_status')
 def user_case_status():
@@ -1253,6 +1259,38 @@ def user_update_profile():
 @app.route('/security_settings')
 def security_settings():
     return render_template('security_settings.html')
+
+@app.route('/police_alerts')
+def police_alerts():
+    conn = sqlite3.connect("user.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, phone, location, district, status FROM user_alert")
+    alerts = cursor.fetchall()
+    conn.close()
+
+    return render_template('police_alerts.html', alerts=alerts)
+
+@app.route('/deactivate_alert/<int:alert_id>', methods=['POST'])
+def deactivate_alert(alert_id):
+    conn = sqlite3.connect("user.db")
+    cursor = conn.cursor()
+    cursor.execute("UPDATE user_alert SET status = 'Deactivated' WHERE id = ?", (alert_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('police_alerts'))
+
+@app.route('/update_alert_status/<int:alert_id>', methods=['POST'])
+def update_alert_status(alert_id):
+    conn = sqlite3.connect("user.db")
+    cursor = conn.cursor()
+    
+    # Update status in database
+    cursor.execute("UPDATE user_alert SET status = 'Deactivated' WHERE id = ?", (alert_id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"status": "success", "message": "Alert deactivated successfully!"})
+
 
 
 if __name__ == '__main__':
