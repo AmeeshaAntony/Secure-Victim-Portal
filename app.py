@@ -1291,6 +1291,19 @@ def update_alert_status(alert_id):
 
     return jsonify({"status": "success", "message": "Alert deactivated successfully!"})
 
+@app.route('/admin_alerts')
+def admin_alerts():
+    conn = sqlite3.connect("user.db")
+    cursor = conn.cursor()
+
+    # Fetch alerts from user_alert table
+    cursor.execute("SELECT id, name, location, status FROM user_alert")
+    alerts = cursor.fetchall()
+
+    conn.close()
+
+    return render_template('admin_alerts.html', alerts=alerts)
+
 
 
 if __name__ == '__main__':

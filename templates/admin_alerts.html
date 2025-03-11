@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Alerts</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: white;
+        }
+        .container {
+            margin-top: 30px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: cyan;
+        }
+        .table-container {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px cyan;
+        }
+        table {
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        th, td {
+            text-align: center;
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+        thead {
+            background: cyan;
+            color: black;
+            font-weight: bold;
+        }
+        tbody tr:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+        .status-active {
+            color: green;
+            font-weight: bold;
+        }
+        .status-deactivated {
+            color: red;
+            font-weight: bold;
+        }
+        .back-btn {
+            margin-top: 20px;
+            background: cyan;
+            color: black;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.3s;
+        }
+        .back-btn:hover {
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🚨 Latest Alerts</h2>
+
+        <div class="table-container">
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in alerts %}
+                    <tr>
+                        <td>{{ alert[0] }}</td>
+                        <td>{{ alert[1] }}</td>
+                        <td>{{ alert[2] }}</td>
+                        <td>
+                            {% if alert[3] == "Active" %}
+                                <span class="status-active">Active</span>
+                            {% else %}
+                                <span class="status-deactivated">Deactivated</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Back Button -->
+        <div class="text-center">
+            <a href="{{ url_for('admin_home') }}" class="back-btn">⬅ Back to Home</a>
+        </div>
+    </div>
+</body>
+</html>

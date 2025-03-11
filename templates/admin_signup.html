@@ -61,8 +61,10 @@
                 <small id="confirm_password_error" class="error-message"></small>
             
                 <button type="submit" class="signup-btn">Register</button>
+
+                <!-- ✅ "Already have an account? Login" Link -->
+                <p class="login-link">Already have an account? <a href="{{ url_for('admin_login') }}">Login</a></p>
             </form>
-            
         </div>
     </div>
 
@@ -88,64 +90,6 @@
                 });
             }
         }
-
-        function validateForm() {
-            let isValid = true;
-
-            // Phone number validation (10 digits)
-            const phone = document.getElementById("phone").value;
-            const phoneError = document.getElementById("phone_error");
-            if (!/^\d{10}$/.test(phone)) {
-                phoneError.textContent = "Phone number must be exactly 10 digits.";
-                isValid = false;
-            } else {
-                phoneError.textContent = "";
-            }
-
-            // Email validation
-            const email = document.getElementById("email").value;
-            const emailError = document.getElementById("email_error");
-            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-            if (!emailRegex.test(email)) {
-                emailError.textContent = "Enter a valid email address.";
-                isValid = false;
-            } else {
-                emailError.textContent = "";
-            }
-
-            // Judicial ID validation (Starts with J, ends with a digit)
-            const judicialId = document.getElementById("judicial_id").value;
-            const judicialIdError = document.getElementById("judicial_id_error");
-            if (!/^J.*\d$/.test(judicialId)) {
-                judicialIdError.textContent = "Judicial ID must start with 'J' and end with a digit.";
-                isValid = false;
-            } else {
-                judicialIdError.textContent = "";
-            }
-
-            // Password validation (At least 8 characters, 1 uppercase, 1 lowercase, 1 digit, 1 special character)
-            const password = document.getElementById("password").value;
-            const passwordError = document.getElementById("password_error");
-            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-            if (!passwordRegex.test(password)) {
-                passwordError.textContent = "Password must be at least 8 characters with uppercase, lowercase, digit & special character.";
-                isValid = false;
-            } else {
-                passwordError.textContent = "";
-            }
-
-            // Confirm password validation
-            const confirmPassword = document.getElementById("confirm_password").value;
-            const confirmPasswordError = document.getElementById("confirm_password_error");
-            if (confirmPassword !== password) {
-                confirmPasswordError.textContent = "Passwords do not match.";
-                isValid = false;
-            } else {
-                confirmPasswordError.textContent = "";
-            }
-
-            return isValid;
-        }
     </script>
 
     <style>
@@ -154,6 +98,20 @@
             font-size: 12px;
             margin-top: 2px;
             display: block;
+        }
+        /* ✅ Style for the Login Link */
+        .login-link {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .login-link a {
+            color: black;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
         }
     </style>
 </body>
