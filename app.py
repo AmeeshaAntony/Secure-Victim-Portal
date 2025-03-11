@@ -487,12 +487,32 @@ def case_questioning(case_number):
 ### ✅ Route to View & Manage Cases
 @app.route('/manage_cases')
 def manage_cases():
-    with sqlite3.connect("cases.db") as conn:
+    with sqlite3.connect('cases.db') as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, case_number, date_of_reporting, place, reported_person FROM cases")
-        cases = cursor.fetchall()
-
+        cursor.execute("SELECT case_number FROM cases")  # Fetch only case numbers
+        cases = cursor.fetchall()  # List of tuples [(123,), (456,), (789,)]
+    
     return render_template('manage_cases.html', cases=cases)
+
+@app.route('/case_details')
+def case_details():
+    officer_id = session.get('officer_id')  # Ensure officer is logged in
+
+    # Fetch the latest case (or modify logic to select a specific case)
+    with sqlite3.connect('cases.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM cases ORDER BY case_number DESC LIMIT 1")  
+        case = cursor.fetchone()
+
+    if not case:
+        flash("No cases found!", "danger")
+        return redirect(url_for('manage_cases'))  # Redirect back to manage cases
+
+    # ✅ Log case access
+    log_case_action(officer_id, case[1], "Viewed Case Details")
+
+    return render_template('case_details.html', case=case)
+
 
 @app.route('/admin/logs')
 def admin_logs():
@@ -508,24 +528,7 @@ def admin_logs():
     return render_template('admin_logs.html', logs=logs)
 
 
-@app.route('/case_details/<case_number>')
-def case_details(case_number):
-    officer_id = session.get('officer_id')  # Ensure officer is logged in
 
-    # Fetch case details from your database
-    with sqlite3.connect('cases.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM cases WHERE case_number = ?", (case_number,))
-        case = cursor.fetchone()
-
-    if not case:
-        flash("Case not found!", "danger")
-        return redirect(url_for('home'))
-
-    # ✅ Log that the officer viewed the case details
-    log_case_action(officer_id, case_number, "Viewed Case Details")
-
-    return render_template('case_details.html', case=case)
 
 def log_case_action(officer_id, case_number, action):
     conn = sqlite3.connect("access_control.db")
