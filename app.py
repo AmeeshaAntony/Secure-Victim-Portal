@@ -817,7 +817,7 @@ def admin_signup():
 
         # Password must have an uppercase, lowercase, digit, special character, and at least 8 characters
         if not re.match(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$', password):
-            flash("Password must have uppercase, lowercase, number, special character, and be at least 8 characters long", "error")
+            flash("Password must contain uppercase, lowercase, number, special character, and be at least 8 characters long", "error")
             return redirect(url_for('admin_signup'))
 
         # Check if passwords match
@@ -826,7 +826,7 @@ def admin_signup():
             return redirect(url_for('admin_signup'))
 
         # ✅ **Handle Image Upload**
-        if id_card_photo.filename == '':
+        if 'id_card_photo' not in request.files or id_card_photo.filename == '':
             flash("Please upload an ID card photo", "error")
             return redirect(url_for('admin_signup'))
 
@@ -834,23 +834,33 @@ def admin_signup():
         id_card_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         id_card_photo.save(id_card_path)  # Save the file
 
-        # ✅ **Store Data in Database**
-        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')  # Hash password before storing
+        # ✅ **Check if Admin Already Exists**
         try:
             with sqlite3.connect('admin.db') as conn:
                 cursor = conn.cursor()
+                cursor.execute("SELECT id FROM admin WHERE email = ? OR judicial_id = ?", (email, judicial_id))
+                existing_admin = cursor.fetchone()
+                if existing_admin:
+                    flash("Email or Judicial ID already exists!", "error")
+                    return redirect(url_for('admin_signup'))
+
+                # ✅ **Store Data in Database**
+                hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
                 cursor.execute('''
                     INSERT INTO admin (full_name, position, phone, email, state, district, judicial_id, id_card_photo, password)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (full_name, position, phone, email, state, district, judicial_id, id_card_path, hashed_password))
                 conn.commit()
-                flash("Admin registered successfully!", "success")
+
+                flash("Admin registered successfully! Please log in.", "success")
                 return redirect(url_for('admin_login'))
-        except sqlite3.IntegrityError:
-            flash("Email or Judicial ID already exists!", "error")
+
+        except sqlite3.Error as e:
+            flash("Database error: " + str(e), "error")
             return redirect(url_for('admin_signup'))
 
     return render_template('admin_signup.html')
+
 
 def no_cache(view):
     """Decorator to prevent caching"""

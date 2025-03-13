@@ -10,10 +10,11 @@
     <div class="container">
         <div class="signup-box">
             <h2>Admin Signup</h2>
-            <form method="POST" action="/admin/signup" enctype="multipart/form-data" onsubmit="return validateForm()">
+            <form method="POST" action="{{ url_for('admin_signup') }}" enctype="multipart/form-data" onsubmit="return validateForm()">
+                
                 <label for="full_name">Full Name</label>
                 <input type="text" id="full_name" name="full_name" required>
-            
+
                 <label for="position">Position</label>
                 <select id="position" name="position" required>
                     <option value="">Select Position</option>
@@ -23,7 +24,7 @@
                     <option value="SP">SP</option>
                     <option value="Inspector">Inspector</option>
                 </select>
-            
+
                 <label for="phone">Phone Number</label>
                 <input type="tel" id="phone" name="phone" required>
                 <small id="phone_error" class="error-message"></small>
@@ -39,19 +40,19 @@
                     <option value="Tamil Nadu">Tamil Nadu</option>
                     <option value="Karnataka">Karnataka</option>
                 </select>
-            
+
                 <label for="district">District of Incharge</label>
                 <select id="district" name="district" required>
                     <option value="">Select District</option>
                 </select>
-            
+
                 <label for="judicial_id">Judicial ID</label>
                 <input type="text" id="judicial_id" name="judicial_id" required>
                 <small id="judicial_id_error" class="error-message"></small>
 
                 <label for="id_card_photo">Upload ID Card</label>
                 <input type="file" id="id_card_photo" name="id_card_photo" accept="image/*" required>
-            
+
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
                 <small id="password_error" class="error-message"></small>
@@ -59,7 +60,7 @@
                 <label for="confirm_password">Confirm Password</label>
                 <input type="password" id="confirm_password" name="confirm_password" required>
                 <small id="confirm_password_error" class="error-message"></small>
-            
+
                 <button type="submit" class="signup-btn">Register</button>
 
                 <!-- ✅ "Already have an account? Login" Link -->
@@ -90,6 +91,64 @@
                 });
             }
         }
+
+        function validateForm() {
+            let isValid = true;
+
+            // Phone number validation (10 digits)
+            const phone = document.getElementById("phone").value;
+            const phoneError = document.getElementById("phone_error");
+            if (!/^\d{10}$/.test(phone)) {
+                phoneError.textContent = "Phone number must be exactly 10 digits.";
+                isValid = false;
+            } else {
+                phoneError.textContent = "";
+            }
+
+            // Email validation
+            const email = document.getElementById("email").value;
+            const emailError = document.getElementById("email_error");
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(email)) {
+                emailError.textContent = "Enter a valid email address.";
+                isValid = false;
+            } else {
+                emailError.textContent = "";
+            }
+
+            // Judicial ID validation (Starts with J, ends with a digit)
+            const judicialId = document.getElementById("judicial_id").value;
+            const judicialIdError = document.getElementById("judicial_id_error");
+            if (!/^J.*\d$/.test(judicialId)) {
+                judicialIdError.textContent = "Judicial ID must start with 'J' and end with a digit.";
+                isValid = false;
+            } else {
+                judicialIdError.textContent = "";
+            }
+
+            // Password validation (At least 8 characters, 1 uppercase, 1 lowercase, 1 digit, 1 special character)
+            const password = document.getElementById("password").value;
+            const passwordError = document.getElementById("password_error");
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            if (!passwordRegex.test(password)) {
+                passwordError.textContent = "Password must have uppercase, lowercase, number, special character, and be at least 8 characters.";
+                isValid = false;
+            } else {
+                passwordError.textContent = "";
+            }
+
+            // Confirm password validation
+            const confirmPassword = document.getElementById("confirm_password").value;
+            const confirmPasswordError = document.getElementById("confirm_password_error");
+            if (confirmPassword !== password) {
+                confirmPasswordError.textContent = "Passwords do not match.";
+                isValid = false;
+            } else {
+                confirmPasswordError.textContent = "";
+            }
+
+            return isValid;
+        }
     </script>
 
     <style>
@@ -99,6 +158,7 @@
             margin-top: 2px;
             display: block;
         }
+        
         /* ✅ Style for the Login Link */
         .login-link {
             text-align: center;
@@ -112,6 +172,21 @@
         }
         .login-link a:hover {
             text-decoration: underline;
+        }
+
+        /* ✅ Style for the Signup Button */
+        .signup-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .signup-btn:hover {
+            background-color: #218838;
         }
     </style>
 </body>
