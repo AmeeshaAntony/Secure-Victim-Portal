@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Decrypt Photo</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='case_details.css') }}">
+
+    <script>
+        function xorDecrypt(data, key) {
+            let result = "";
+            for (let i = 0; i < data.length; i++) {
+                result += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+            }
+            return result;
+        }
+    </script>
 </head>
 <body>
     <div class="container">

@@ -53,6 +53,22 @@
             $(this).siblings("img").remove();
             $(this).replaceWith(`<button class="btn btn-warning decrypt-btn">Decrypt</button>`);
         });
+        function xorEncrypt(data, key) {
+            let result = "";
+            for (let i = 0; i < data.length; i++) {
+                result += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+            }
+            return result;
+        }
+
+        // XOR Decryption Function (Not used, just placed here)
+        function xorDecrypt(data, key) {
+            let result = "";
+            for (let i = 0; i < data.length; i++) {
+                result += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+            }
+            return result;
+        }
     </script>
 </head>
 <body>
