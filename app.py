@@ -37,16 +37,13 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Initialize `police.db` for police officer management
 def init_police_db():
-    with sqlite3.connect('police.db') as conn:
-        cursor = conn.cursor()
+    try:
+        with sqlite3.connect('police.db') as conn:
+            cursor = conn.cursor()
 
-        # Start a transaction
-        cursor.execute("BEGIN")
-
-        try:
-            # Create the police_officer table if it doesn't exist
+            # ✅ Create `assigned_officer` Table
             cursor.execute('''
-                CREATE TABLE IF NOT EXISTS police_officer (
+                CREATE TABLE IF NOT EXISTS assigned_officer (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     phone TEXT NOT NULL UNIQUE,
@@ -60,17 +57,7 @@ def init_police_db():
                 )
             ''')
 
-            # Check if columns exist before adding them
-            cursor.execute("PRAGMA table_info(police_officer)")
-            columns = [column[1] for column in cursor.fetchall()]  # Get column names
-
-            if 'police_id' not in columns:
-                cursor.execute("ALTER TABLE police_officer ADD COLUMN police_id TEXT UNIQUE")
-
-            if 'aadhar_card_path' not in columns:
-                cursor.execute("ALTER TABLE police_officer ADD COLUMN aadhar_card_path TEXT")
-
-            # Create the query table if it doesn't exist
+            # ✅ Create `query` Table
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS query (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,15 +69,13 @@ def init_police_db():
                 )
             ''')
 
-            # Commit the transaction
+            # ✅ Commit Changes
             conn.commit()
-        except sqlite3.Error as e:
-            # Rollback the transaction in case of an error
-            conn.rollback()
-            print(f"An error occurred: {e}")
-        # No need to close the connection explicitly; the 'with' statement handles it
 
-# Call the function to apply changes
+    except sqlite3.Error as e:
+        print(f"⚠️ Database Error: {e}")
+
+# ✅ Call Function to Apply Changes
 init_police_db()
 
 # Create the database and users table if not exists
@@ -142,6 +127,8 @@ init_admin_db()
 def init_cases_db():
     with sqlite3.connect('cases.db') as conn:
         cursor = conn.cursor()
+
+        # ✅ Create `cases` table if it doesn't exist
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS cases (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -154,7 +141,23 @@ def init_cases_db():
                 photo TEXT
             )
         ''')
+
+        # ✅ Create `assigned_cases` table if it doesn't exist
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS assigned_cases (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                case_number TEXT NOT NULL UNIQUE,
+                officer_id INTEGER NOT NULL,
+                FOREIGN KEY (case_number) REFERENCES cases(case_number),
+                FOREIGN KEY (officer_id) REFERENCES assigned_officer(id)
+            )
+        ''')
+
         conn.commit()
+
+# ✅ Initialize the database
+init_cases_db()
+
 
 # Initialize `case_description.db` for case questioning
 def init_case_description_db():
@@ -314,22 +317,72 @@ def police_logout():
 
 @app.route('/assign_officers')
 def assign_officers():
-    with sqlite3.connect("cases.db") as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT case_number, place FROM cases")
-        cases = cursor.fetchall()
-    
-    return render_template("assign_officers.html", cases=cases)
+    with sqlite3.connect('cases.db') as cases_conn:
+        cases_cursor = cases_conn.cursor()
+
+        # Fetch ALL case numbers from `cases` table
+        cases_cursor.execute("SELECT case_number FROM cases")
+        all_cases = cases_cursor.fetchall()  # List of (case_number,)
+
+        # Fetch assigned officers from `assigned_cases`
+        cases_cursor.execute('''
+            SELECT case_number, officer_id FROM assigned_cases
+        ''')
+        assigned_cases = {row[0]: row[1] for row in cases_cursor.fetchall()}  # {case_number: officer_id}
+
+    cases_with_officers = []
+
+    for case in all_cases:
+        case_number = case[0]
+        officer_id = assigned_cases.get(case_number, None)  # Get officer_id if assigned
+
+        officer_name = "Not Assigned"  # Default value
+        if officer_id:
+            with sqlite3.connect('police.db') as police_conn:
+                police_cursor = police_conn.cursor()
+                police_cursor.execute('SELECT name FROM police_officer WHERE id = ?', (officer_id,))
+                officer = police_cursor.fetchone()
+                if officer:
+                    officer_name = officer[0]  # Fetch officer name
+
+        cases_with_officers.append((case_number, officer_name))
+
+    return render_template('assign_officers.html', cases=cases_with_officers)
 
 
-@app.route('/assign_officer/<case_number>')
+
+@app.route('/assign_specific_officer/<case_number>', methods=['GET', 'POST'])
 def assign_specific_officer(case_number):
-    with sqlite3.connect("police.db") as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, name, position FROM police_officer")
-        officers = cursor.fetchall()
-    
-    return render_template("assign_specific_officer.html", case_number=case_number, officers=officers)
+    with sqlite3.connect('police.db') as police_conn:
+        police_cursor = police_conn.cursor()
+        police_cursor.execute('SELECT id, name FROM police_officer')
+        officers = police_cursor.fetchall()  # List of (id, name) tuples
+
+    if request.method == 'POST':
+        officer_id = request.form.get('officer_id')
+
+        if not officer_id:
+            flash("Please select an officer!", "error")
+            return redirect(url_for('assign_specific_officer', case_number=case_number))
+
+        with sqlite3.connect('cases.db') as cases_conn:
+            cases_cursor = cases_conn.cursor()
+
+            # ✅ Check if case is already assigned, update if exists
+            cases_cursor.execute('SELECT officer_id FROM assigned_cases WHERE case_number = ?', (case_number,))
+            existing_assignment = cases_cursor.fetchone()
+
+            if existing_assignment:
+                cases_cursor.execute('UPDATE assigned_cases SET officer_id = ? WHERE case_number = ?', (officer_id, case_number))
+            else:
+                cases_cursor.execute('INSERT INTO assigned_cases (case_number, officer_id) VALUES (?, ?)', (case_number, officer_id))
+
+            cases_conn.commit()
+
+        flash("Officer assigned successfully!", "success")
+        return redirect(url_for('assign_officers'))
+
+    return render_template('assign_specific_officer.html', case_number=case_number, officers=officers)
 
 
 @app.route('/police', methods=['GET', 'POST'])
