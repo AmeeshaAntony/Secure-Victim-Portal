@@ -27,7 +27,7 @@
             <input type="email" id="email" name="email" placeholder="Email ID (Username)" required>
             <p id="emailError" class="error-message"></p>
             
-            <label for="aadhar_card">Aadhaar Card:</label>
+            <label for="aadhar_card">Police ID:</label>
             <input type="file" id="aadhar_card" name="aadhar_card" accept="image/*,.pdf" required>
             <p id="aadharError" class="error-message"></p>
         
@@ -59,8 +59,9 @@
         </form>
         
 
-        <p>Already have an account? <a href="login_police.html">Login</a></p>
-        <a href="../entry.html">Back to Home</a>
+        <p>Already have an account? <a href="{{ url_for('police_login') }}">Login</a></p>
+        <a href="{{ url_for('welcome') }}">Back to Home</a>
+
     </div>
 
     <script>
@@ -80,7 +81,7 @@
             // Validate Password
             let password = document.getElementById("password").value;
             let passwordError = document.getElementById("passwordError");
-            let passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            let passwordPattern = /^(?=.[a-z])(?=.[A-Z])(?=.\d)(?=.[@$!%?&])[A-Za-z\d@$!%?&]{8,}$/;
             if (!passwordPattern.test(password)) {
                 passwordError.textContent = "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.";
                 isValid = false;

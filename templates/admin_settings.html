@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,13 +14,16 @@
             background-attachment: fixed;
             font-family: Arial, sans-serif;
         }
+
         .container {
             margin-top: 50px;
         }
+
         .settings-wrapper {
             display: flex;
             gap: 30px;
         }
+
         .sidebar {
             background: rgba(255, 255, 255, 0.9);
             padding: 20px;
@@ -28,6 +32,7 @@
             box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
             width: 250px;
         }
+
         .content {
             background: rgba(255, 255, 255, 0.9);
             padding: 20px;
@@ -35,6 +40,7 @@
             box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
             flex-grow: 1;
         }
+
         .sidebar a {
             display: block;
             padding: 10px;
@@ -44,79 +50,98 @@
             border-radius: 5px;
             transition: 0.3s;
         }
-        .sidebar a:hover, .sidebar a.active {
+
+        .sidebar a:hover,
+        .sidebar a.active {
             background-color: #007bff;
             color: white;
         }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <div class="settings-wrapper">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <h4 class="text-center">Settings</h4>
-            <a href="{{ url_for('admin_settings', section='profile') }}" class="{% if section == 'profile' %}active{% endif %}">👤 Profile</a>
-            <a href="{{ url_for('admin_settings', section='security') }}" class="{% if section == 'security' %}active{% endif %}">🔐 Adjust Security Settings</a>
-            <a href="{{ url_for('admin_settings', section='access_control') }}" class="{% if section == 'access_control' %}active{% endif %}">🛡 Role-Based Access Control</a>
+    <div class="container">
+        <div class="settings-wrapper">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <h4 class="text-center">Settings</h4>
+                <a href="{{ url_for('admin_settings', section='profile') }}"
+                    class="{% if section == 'profile' %}active{% endif %}">👤 Profile</a>
+                <a href="{{ url_for('admin_settings', section='security') }}"
+                    class="{% if section == 'security' %}active{% endif %}">🔐 Update Key</a>
+                <a href="{{ url_for('admin_settings', section='access_control') }}"
+                    class="{% if section == 'access_control' %}active{% endif %}">🛡 Role-Based Access Control</a>
+            </div>
+
+            <!-- Main Content -->
+            <div class="content">
+                {% if section == 'profile' %}
+                <h3>👤 Profile</h3>
+                <form action="{{ url_for('edit_admin') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" name="name" value="{{ admin.name if admin else '' }}"
+                            required>
+
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone</label>
+                        <input type="text" class="form-control" name="phone" value="{{ admin.phone }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" value="{{ admin.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Position</label>
+                        <input type="text" class="form-control" name="position" value="{{ admin.position }}" readonly>
+                    </div>
+                    <button type="submit" class="btn btn-primary">✏ Edit</button>
+                </form>
+
+                {% elif section == 'security' %}
+                <h3>🔐 Adjust Security Settings</h3>
+                <form action="{{ url_for('update_secret_key') }}" method="POST">
+                    <label>Current Secret Key:</label>
+                    <input type="text" class="form-control" value="{{ secret_key }}" disabled>
+
+                    <label>New Secret Key:</label>
+                    <input type="text" class="form-control" name="new_secret_key" required>
+
+                    <button type="submit" class="btn btn-primary mt-3">Update</button>
+                </form>
+
+
+
+                {% elif section == 'access_control' %}
+                <h3>🛡 Role-Based Access Control</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Officer Name</th>
+                            <th>Access Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for officer in officers %}
+                        <tr>
+                            <td>{{ officer[0] }}</td>
+                            <td>{{ officer[1] }}</td>
+                            <td>{{ officer[2] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
         </div>
-
-        <!-- Main Content -->
-        <div class="content">
-            {% if section == 'profile' %}
-            <h3>👤 Profile</h3>
-            <form action="{{ url_for('edit_admin') }}" method="POST">
-                <div class="mb-3">
-                    <label class="form-label">Name</label>
-                    <input type="text" class="form-control" name="name" value="{{ admin.name }}" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Phone</label>
-                    <input type="text" class="form-control" name="phone" value="{{ admin.phone }}" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-control" name="email" value="{{ admin.email }}" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Position</label>
-                    <input type="text" class="form-control" name="position" value="{{ admin.position }}" readonly>
-                </div>
-                <button type="submit" class="btn btn-primary">✏️ Edit</button>
-            </form>
-
-            {% elif section == 'security' %}
-            <h3>🔐 Adjust Security Settings</h3>
-            <p>Security settings options will be here.</p>
-
-            {% elif section == 'access_control' %}
-            <h3>🛡 Role-Based Access Control</h3>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Officer Name</th>
-                        <th>Access Level</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for officer in officers %}
-                    <tr>
-                        <td>{{ officer[0] }}</td>
-                        <td>{{ officer[1] }}</td>
-                        <td>{{ officer[2] }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% endif %}
+        <div class="text-center mt-4">
+            <a href="{{ url_for('admin_home') }}" class="btn btn-primary">Home</a>
         </div>
     </div>
-    <div class="text-center mt-4">
-        <a href="{{ url_for('admin_home') }}" class="btn btn-primary">Home</a>
-    </div>
-</div>
 
 </body>
+
 </html>

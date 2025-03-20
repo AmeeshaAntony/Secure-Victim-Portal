@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 import bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from cryptography.fernet import Fernet
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -17,6 +18,8 @@ app.secret_key = "your_secret_key"  # Required for flash messages
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/users.db'
 SECRET_KEY = "crime"  # Set the correct decryption key
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
+encryption_key = Fernet.generate_key()
+cipher = Fernet(encryption_key)
 
 db = SQLAlchemy(app)
 
@@ -35,13 +38,13 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 # Ensure upload folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Initialize `police.db` for police officer management
+# Initialize police.db for police officer management
 def init_police_db():
     try:
         with sqlite3.connect('police.db') as conn:
             cursor = conn.cursor()
 
-            # ✅ Create `assigned_officer` Table
+            # ✅ Create assigned_officer Table
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS assigned_officer (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,7 +60,7 @@ def init_police_db():
                 )
             ''')
 
-            # ✅ Create `query` Table
+            # ✅ Create query Table
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS query (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -73,7 +76,7 @@ def init_police_db():
             conn.commit()
 
     except sqlite3.Error as e:
-        print(f"⚠️ Database Error: {e}")
+        print(f"⚠ Database Error: {e}")
 
 # ✅ Call Function to Apply Changes
 init_police_db()
@@ -105,6 +108,8 @@ conn.close()
 def init_admin_db():
     with sqlite3.connect('admin.db') as conn:
         cursor = conn.cursor()
+
+        # Create the admin table if it doesn't exist
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS admin (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,16 +124,36 @@ def init_admin_db():
                 password TEXT NOT NULL
             )
         ''')
+
+        # Create the security_settings table if it doesn't exist
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS security_settings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                secret_key TEXT NOT NULL
+            )
+        ''')
+
+        # Ensure there is always exactly ONE row in security_settings
+        cursor.execute("SELECT COUNT(*) FROM security_settings")
+        count = cursor.fetchone()[0]
+
+        if count == 0:
+            cursor.execute("INSERT INTO security_settings (id, secret_key) VALUES (1, 'crime')")
+        elif count > 1:
+            # If there are multiple entries, delete extra rows (keeping the first one)
+            cursor.execute("DELETE FROM security_settings WHERE id NOT IN (SELECT id FROM security_settings LIMIT 1)")
+
         conn.commit()
-# Call the function to ensure the database is set up
+
+# Call the function to ensure the database is properly initialized
 init_admin_db()
 
-# Initialize `cases.db` for case management
+# Initialize cases.db for case management
 def init_cases_db():
     with sqlite3.connect('cases.db') as conn:
         cursor = conn.cursor()
 
-        # ✅ Create `cases` table if it doesn't exist
+        # ✅ Create cases table if it doesn't exist
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS cases (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -142,7 +167,7 @@ def init_cases_db():
             )
         ''')
 
-        # ✅ Create `assigned_cases` table if it doesn't exist
+        # ✅ Create assigned_cases table if it doesn't exist
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS assigned_cases (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -159,7 +184,7 @@ def init_cases_db():
 init_cases_db()
 
 
-# Initialize `case_description.db` for case questioning
+# Initialize case_description.db for case questioning
 def init_case_description_db():
     with sqlite3.connect('case_description.db') as conn:
         cursor = conn.cursor()
@@ -320,11 +345,11 @@ def assign_officers():
     with sqlite3.connect('cases.db') as cases_conn:
         cases_cursor = cases_conn.cursor()
 
-        # Fetch ALL case numbers from `cases` table
+        # Fetch ALL case numbers from cases table
         cases_cursor.execute("SELECT case_number FROM cases")
         all_cases = cases_cursor.fetchall()  # List of (case_number,)
 
-        # Fetch assigned officers from `assigned_cases`
+        # Fetch assigned officers from assigned_cases
         cases_cursor.execute('''
             SELECT case_number, officer_id FROM assigned_cases
         ''')
@@ -413,6 +438,7 @@ def police_login():
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route('/police/signup', methods=['GET', 'POST'])
 def police_signup():
@@ -852,7 +878,7 @@ def admin_signup():
         confirm_password = request.form['confirm_password']
         id_card_photo = request.files['id_card_photo']
 
-        # ✅ **Validations**
+        # ✅ *Validations*
         # Phone number must be exactly 10 digits
         if not re.match(r'^\d{10}$', phone):
             flash("Phone number must be exactly 10 digits", "error")
@@ -869,7 +895,7 @@ def admin_signup():
             return redirect(url_for('admin_signup'))
 
         # Password must have an uppercase, lowercase, digit, special character, and at least 8 characters
-        if not re.match(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$', password):
+        if not re.match(r'^(?=.[A-Z])(?=.[a-z])(?=.\d)(?=.[@$!%?&])[A-Za-z\d@$!%?&]{8,}$', password):
             flash("Password must contain uppercase, lowercase, number, special character, and be at least 8 characters long", "error")
             return redirect(url_for('admin_signup'))
 
@@ -878,7 +904,7 @@ def admin_signup():
             flash("Passwords do not match", "error")
             return redirect(url_for('admin_signup'))
 
-        # ✅ **Handle Image Upload**
+        # ✅ *Handle Image Upload*
         if 'id_card_photo' not in request.files or id_card_photo.filename == '':
             flash("Please upload an ID card photo", "error")
             return redirect(url_for('admin_signup'))
@@ -887,7 +913,7 @@ def admin_signup():
         id_card_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         id_card_photo.save(id_card_path)  # Save the file
 
-        # ✅ **Check if Admin Already Exists**
+        # ✅ *Check if Admin Already Exists*
         try:
             with sqlite3.connect('admin.db') as conn:
                 cursor = conn.cursor()
@@ -897,7 +923,7 @@ def admin_signup():
                     flash("Email or Judicial ID already exists!", "error")
                     return redirect(url_for('admin_signup'))
 
-                # ✅ **Store Data in Database**
+                # ✅ *Store Data in Database*
                 hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
                 cursor.execute('''
                     INSERT INTO admin (full_name, position, phone, email, state, district, judicial_id, id_card_photo, password)
@@ -1023,17 +1049,54 @@ def get_admin():
         return {"name": admin[0], "phone": admin[1], "email": admin[2], "position": admin[3]}
     return None  # Handle case where admin is not found
 
-@app.route('/admin/settings')
+def get_secret_key():
+    """Fetch and decrypt the secret key from the database."""
+    with sqlite3.connect('admin.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT secret_key FROM security_settings")
+        result = cursor.fetchone()
+
+    if result:
+        try:
+            return cipher.decrypt(result[0]).decode()
+        except Exception as e:
+            print(f"Decryption failed: {e}")
+            return "Error: Secret Key Invalid"
+    return "Not Set"
+
+@app.route('/admin_settings')
 def admin_settings():
-    section = request.args.get('section', 'profile')
-    
-    officers = get_officers()  # Fetch from access_control.db
-    admin = get_admin()  # Fetch from admin.db
+    section = request.args.get('section', 'profile')  # Default section is 'profile'
 
-    if not admin:
-        return "Admin not found", 404  # Handle error if admin doesn't exist
+    # Connect to admin.db for secret key and admin details
+    with sqlite3.connect('admin.db') as conn:
+        cursor = conn.cursor()
 
-    return render_template('admin_settings.html', section=section, officers=officers, admin=admin)
+        # Fetch the latest secret key
+        cursor.execute("SELECT secret_key FROM security_settings ORDER BY id DESC LIMIT 1")
+        result = cursor.fetchone()
+        secret_key = result[0] if result else "Not Set"
+
+        # Fetch the admin details
+        cursor.execute("SELECT id, full_name, position, phone, email FROM admin LIMIT 1")
+        admin_result = cursor.fetchone()
+        admin = {
+            "id": admin_result[0],
+            "name": admin_result[1],
+            "position": admin_result[2],
+            "phone": admin_result[3],
+            "email": admin_result[4]
+        } if admin_result else None
+
+    # Connect to access_control.db for officers' details
+    with sqlite3.connect('access_control.db') as conn:
+        cursor = conn.cursor()
+
+        # Fetch officer details
+        cursor.execute("SELECT id, name, access_level FROM officers")
+        officers = cursor.fetchall()  # Fetch all officer details as a list of tuples
+
+    return render_template('admin_settings.html', section=section, secret_key=secret_key, admin=admin, officers=officers)
 
 @app.route('/update_access_control', methods=['POST'])
 def update_access_control():
@@ -1202,7 +1265,7 @@ def send_alert():
 
         user_name, user_phone = user
 
-        # ✅ Create `user_alert` table if it doesn't exist
+        # ✅ Create user_alert table if it doesn't exist
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS user_alert (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1217,7 +1280,7 @@ def send_alert():
             )
         ''')
 
-        # ✅ Save the alert to `user_alert` table with status as "Active"
+        # ✅ Save the alert to user_alert table with status as "Active"
         cursor.execute("INSERT INTO user_alert (user_id, name, phone, location, district, status) VALUES (?, ?, ?, ?, ?, 'Active')",
                        (session['user_id'], user_name, user_phone, location, district))
 
@@ -1369,6 +1432,30 @@ def admin_alerts():
     conn.close()
 
     return render_template('admin_alerts.html', alerts=alerts)
+
+
+@app.route('/update_secret_key', methods=['POST'])
+def update_secret_key():
+    new_secret_key = request.form.get('new_secret_key')
+
+    if not new_secret_key:
+        flash("Please enter a new secret key.", "danger")
+        return redirect(url_for('admin_settings', section='security'))
+
+    with sqlite3.connect('admin.db') as conn:
+        cursor = conn.cursor()
+        
+        # Ensure there's always one row (id=1) to update
+        cursor.execute('''
+            INSERT INTO security_settings (id, secret_key) 
+            VALUES (1, ?) 
+            ON CONFLICT(id) DO UPDATE SET secret_key = ?
+        ''', (new_secret_key, new_secret_key))
+
+        conn.commit()
+
+    flash("Secret key updated successfully!", "success")
+    return redirect(url_for('admin_settings', section='security'))
 
 
 
