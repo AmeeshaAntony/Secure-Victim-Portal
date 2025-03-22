@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url("{{ url_for('static', filename='case_details_view.jpg') }}") no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h2 {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #007bff;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        tr:hover {
+            background: #e9ecef;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 16px;
+            border: none;
+            background: #28a745;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background: #218838;
+        }
+
+        a button {
+            background: #007bff;
+            padding: 8px 14px;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+
+        a button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Case Details</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Case Number</th>
+                <th>Place</th>
+                <th>Date of Reporting</th>
+                <th>Reported Person</th>
+                <th>Time</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for case in cases %}
+            <tr>
+                <td>{{ case[0] }}</td>
+                <td>{{ case[1] }}</td>
+                <td>{{ case[2] }}</td>
+                <td>{{ case[3] }}</td>
+                <td>{{ case[4] }}</td>
+                <td>
+                    <a href="{{ url_for('case_details', case_number=case[0]) }}">
+                        <button>View</button>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <button onclick="window.location.href='{{ url_for('manage_cases') }}'">Back</button>
+
+</body>
+</html>

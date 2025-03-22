@@ -563,15 +563,38 @@ def case_questioning(case_number):
 
     return render_template("case_questioning.html", case_number=case_number)
 
+conn = sqlite3.connect('cases.db')
+cursor = conn.cursor()
+
+cursor.execute("SELECT * FROM cases")
+rows = cursor.fetchall()
+
+if rows:
+    for row in rows:
+        print(row)  # Print each case
+else:
+    print("No cases found in the database.")
+
+conn.close()
+
 ### ✅ Route to View & Manage Cases
 @app.route('/manage_cases')
 def manage_cases():
     with sqlite3.connect('cases.db') as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT case_number FROM cases")  # Fetch only case numbers
+        cursor.execute("SELECT case_number, place, date_of_reporting, reported_person, time FROM cases")
         cases = cursor.fetchall()  # List of tuples [(123,), (456,), (789,)]
     
     return render_template('manage_cases.html', cases=cases)
+
+@app.route('/case_list')
+def case_list():
+    with sqlite3.connect('cases.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT case_number, place, date_of_reporting, reported_person, time FROM cases")
+        cases = cursor.fetchall()
+
+    return render_template('case_details_view.html', cases=cases)
 
 @app.route('/case_details')
 def case_details():
