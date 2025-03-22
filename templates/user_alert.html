@@ -82,7 +82,6 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
             justify-content: center;
             align-items: center;
         }
@@ -133,7 +132,7 @@
     <div class="container">
         <div class="alert-box">
             <p>⚠ Warning! Pressing the button will send an emergency alert.</p>
-            <button class="alert-btn" onclick="showPopup()">Send Alert</button>
+            <button class="alert-btn" onclick="openPopup()">Send Alert</button>
         </div>
     </div>
 
@@ -141,12 +140,9 @@
     <div id="alertModal" class="modal">
         <div class="modal-content">
             <h3>Enter Alert Details</h3>
-            <input type="text" id="location" placeholder="Enter Your Location" required>
+            <input type="text" id="location" placeholder="Fetching Location..." readonly required>
             <select id="district" required>
-                <option value="" disabled selected>Select District</option>
-                <option value="Ernakulam">Ernakulam</option>
-                <option value="Thrissur">Thrissur</option>
-                <option value="Kozhikode">Kozhikode</option>
+                <option value="" disabled selected>Fetching District...</option>
             </select>
             <div class="modal-buttons">
                 <button class="cancel-btn" onclick="closePopup()">Cancel</button>
@@ -156,39 +152,81 @@
     </div>
 
     <script>
-        function showPopup() {
+        function openPopup() {
             document.getElementById("alertModal").style.display = "flex";
+            getUserLocation();
         }
 
         function closePopup() {
             document.getElementById("alertModal").style.display = "none";
         }
 
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function (position) {
+                        let latitude = position.coords.latitude;
+                        let longitude = position.coords.longitude;
+
+                        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
+                            .then(response => response.json())
+                            .then(data => {
+                                let address = data.address;
+
+                                document.getElementById("location").value = data.display_name || "Location Unavailable";
+
+                                let district = address.state_district || address.county || address.city || "District Not Found";
+
+                                populateDistrict(district);
+                            })
+                            .catch(error => {
+                                console.error("Error fetching location:", error);
+                                document.getElementById("location").value = "Location Unavailable";
+                                populateDistrict("District Not Found");
+                            });
+                    },
+                    function (error) {
+                        console.error("Geolocation Error:", error);
+                        document.getElementById("location").value = "Location Permission Denied";
+                        populateDistrict("District Permission Denied");
+                    }
+                );
+            } else {
+                document.getElementById("location").value = "Geolocation Not Supported";
+                populateDistrict("Geolocation Not Supported");
+            }
+        }
+
+        function populateDistrict(selectedDistrict) {
+            let districtDropdown = document.getElementById("district");
+            districtDropdown.innerHTML = ""; 
+
+            let districts = ["Ernakulam", "Thrissur", "Kozhikode"];
+
+            districts.forEach(district => {
+                let option = document.createElement("option");
+                option.value = district;
+                option.textContent = district;
+                districtDropdown.appendChild(option);
+            });
+
+            districtDropdown.value = districts.includes(selectedDistrict) ? selectedDistrict : "";
+        }
+
         function sendAlert() {
             let location = document.getElementById("location").value;
             let district = document.getElementById("district").value;
 
-            if (!location || !district) {
-                alert("Please enter both location and district.");
+            if (!district) {
+                alert("Please select a district.");
                 return;
             }
 
-            fetch('/send_alert', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ location: location, district: district })
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.message);
-                closePopup();
-                window.location.href = "/user_home";  // Redirect to home
-            })
-            .catch(error => {
-                alert("Error sending alert! Please try again.");
-                console.error(error);
-            });
+            alert(`🚨 Alert Sent!\n📍 Location: ${location}\n🏢 District: ${district}`);
+            closePopup();
         }
+
+        openPopup();
     </script>
 </body>
 </html>

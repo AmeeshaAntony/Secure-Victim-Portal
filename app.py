@@ -563,20 +563,6 @@ def case_questioning(case_number):
 
     return render_template("case_questioning.html", case_number=case_number)
 
-conn = sqlite3.connect('cases.db')
-cursor = conn.cursor()
-
-cursor.execute("SELECT * FROM cases")
-rows = cursor.fetchall()
-
-if rows:
-    for row in rows:
-        print(row)  # Print each case
-else:
-    print("No cases found in the database.")
-
-conn.close()
-
 ### ✅ Route to View & Manage Cases
 @app.route('/manage_cases')
 def manage_cases():
