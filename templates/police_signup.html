@@ -14,8 +14,8 @@
             <input type="text" name="name" placeholder="Full Name" required>
             
             <input type="text" id="police_id" name="police_id" placeholder="Police ID (e.g., P12345)" required>
-            <p id="policeIdError" class="error-message"></p>
-        
+            <p id="policeIdError" class="error-message" style="color: red;"></p>
+
             <input type="password" id="password" name="password" placeholder="Enter Password" required>
             <p id="passwordError" class="error-message"></p>
         
@@ -114,6 +114,34 @@
                 event.preventDefault(); // Stop form submission if validation fails
             }
         });
+            document.getElementById("police_id").addEventListener("input", function () {
+                let policeId = this.value;
+                let errorMsg = document.getElementById("policeIdError");
+            
+                if (policeId.length < 3) {
+                    errorMsg.textContent = "Police ID must be at least 3 characters.";
+                    return;
+                }
+            
+                // AJAX request to check uniqueness
+                fetch("/check_police_id", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ police_id: policeId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.unique) {
+                        errorMsg.textContent = "";
+                    } else {
+                        errorMsg.textContent = data.error;
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+            });
+            
         
     </script>
 

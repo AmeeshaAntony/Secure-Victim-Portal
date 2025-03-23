@@ -1466,7 +1466,23 @@ def update_secret_key():
     flash("Secret key updated successfully!", "success")
     return redirect(url_for('admin_settings', section='security'))
 
+def is_police_id_unique(police_id):
+    with sqlite3.connect('police.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM police_officer WHERE police_id = ?", (police_id,))
+        count = cursor.fetchone()[0]
+        return count == 0  # Returns True if Police ID is unique
 
+# API Route to check Police ID uniqueness
+@app.route('/check_police_id', methods=['POST'])
+def check_police_id():
+    data = request.get_json()
+    police_id = data.get('police_id')
+
+    if is_police_id_unique(police_id):
+        return jsonify({"unique": True})
+    else:
+        return jsonify({"unique": False, "error": "Police ID already exists!"})
 
 if __name__ == '__main__':
     app.run(debug=True)
