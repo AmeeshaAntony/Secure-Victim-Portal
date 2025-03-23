@@ -23,22 +23,23 @@
         .navbar {
             width: 100%;
             display: flex;
-            justify-content: center;
+            justify-content: space-evenly; /* Spread buttons evenly */
             background: rgba(0, 0, 0, 0.8);
             padding: 15px 0;
         }
         .navbar a {
+            flex: 1; /* Make each button take equal width */
+            text-align: center;
             color: cyan;
             text-decoration: none;
-            padding: 10px 25px;
-            margin: 0 15px;
+            padding: 12px 0;
             font-size: 16px;
             transition: 0.3s;
+            border-radius: 5px;
         }
         .navbar a:hover {
             background: cyan;
             color: black;
-            border-radius: 5px;
         }
         .container {
             margin-top: 80px;

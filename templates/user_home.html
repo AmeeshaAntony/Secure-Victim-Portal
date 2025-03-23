@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Secure Victim Portal - Home</title>
+    <title>User Settings</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         * {
@@ -16,87 +16,48 @@
             font-family: 'Poppins', sans-serif;
         }
         body {
-            background-image: url('{{ url_for("static", filename="user_home.jpg") }}');
-            color: rgb(15, 0, 0);
-            text-align: center;
-            position: center;
+            background-image: url("{{ url_for('static', filename='user_home.jpg') }}");
             background-size: cover;
-        }
-        body::before { 
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-        }
-        .container {
-            width: 100%;
-            padding: 50px 20px;
+            color: white;
+            text-align: center;
         }
         .navbar {
             display: flex;
             justify-content: space-between;
-            align-items: center;
             padding: 20px;
             background: rgba(0, 0, 0, 0.8);
-            color: cyan;
         }
         .navbar a {
-            color: cyan;
+            color: black; /* Change text color */
             text-decoration: none;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2); /* Colored background */
-            border-radius: 5px; /* Rounded corners */
-            margin: 0 5px; /* Spacing between buttons */
-            transition: background 0.3s ease; /* Smooth transition for hover effect */
+            padding: 12px 20px;
+            border-radius: 5px;
+            background: cyan; /* Set background color for all buttons */
+            font-weight: bold;
+            transition: 0.3s;
         }
         .navbar a:hover {
-            background: cyan; /* Hover background color */
-            color: black; /* Hover text color */
-        }
-        .hero {
-            margin-top: 50px;
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .hero h1 {
-            font-size: 50px;
-            margin-bottom: 20px;
-            display: inline-block;
-            padding: 10px 20px;
-            border-radius: 10px;
-        }
-        .hero p {
-            display: inline-block;
-            padding: 10px 20px;
-            border-radius: 10px;
+            background: green; /* Change background on hover */
+            color: black;
         }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <a href="{{ url_for('user_alert') }}" class="btn alert-btn">Send Alert</a>
+        <a href="{{ url_for('user_alert') }}">Send Alert</a>
         <a href="{{ url_for('user_case_status') }}">Case Status</a>
         <a href="{{ url_for('user_settings') }}">Settings</a>
         <a href="{{ url_for('user_help') }}">Help</a>
         <a href="{{ url_for('user_logout') }}">Logout</a>
     </div>
-    <div class="container">
-       
-    </div>
+
     <script>
-        history.pushState(null, null, location.href);
-        window.onpopstate = function () {
-            history.go(1);
-        };
+        // Remove history pushState to allow back button navigation
         window.onload = function () {
-            if (performance.navigation.type === 2) {  // Detects back button
-                window.location.href = "{{ url_for('user_home') }}";  // Redirects to home
+            if (performance.navigation.type === 2) {
+                console.log("Back button detected");
             }
         };
     </script>
-    
 </body>
 </html>

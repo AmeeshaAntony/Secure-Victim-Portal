@@ -167,35 +167,44 @@
                     function (position) {
                         let latitude = position.coords.latitude;
                         let longitude = position.coords.longitude;
-
+        
+                        console.log(`📍 Coordinates: Latitude ${latitude}, Longitude ${longitude}`);
+        
                         fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
                             .then(response => response.json())
                             .then(data => {
-                                let address = data.address;
-
-                                document.getElementById("location").value = data.display_name || "Location Unavailable";
-
-                                let district = address.state_district || address.county || address.city || "District Not Found";
-
+                                console.log("📌 Nominatim API Response:", data);
+        
+                                let address = data.address || {};
+                                let fullLocation = data.display_name || "Location Unavailable";
+        
+                                document.getElementById("location").value = fullLocation;
+        
+                                let district = address.state_district || address.county || address.city || address.state || "District Not Found";
+        
+                                console.log("🏢 Detected District:", district);
                                 populateDistrict(district);
                             })
                             .catch(error => {
-                                console.error("Error fetching location:", error);
+                                console.error("❌ API Error Fetching Location:", error);
                                 document.getElementById("location").value = "Location Unavailable";
                                 populateDistrict("District Not Found");
                             });
                     },
                     function (error) {
-                        console.error("Geolocation Error:", error);
+                        console.error("❌ Geolocation Error:", error);
                         document.getElementById("location").value = "Location Permission Denied";
                         populateDistrict("District Permission Denied");
-                    }
+                    },
+                    { timeout: 10000, enableHighAccuracy: true } // Increase timeout, improve accuracy
                 );
             } else {
                 document.getElementById("location").value = "Geolocation Not Supported";
                 populateDistrict("Geolocation Not Supported");
             }
         }
+        
+        
 
         function populateDistrict(selectedDistrict) {
             let districtDropdown = document.getElementById("district");

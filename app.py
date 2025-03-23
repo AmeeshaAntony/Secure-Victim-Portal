@@ -11,6 +11,7 @@ import bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from cryptography.fernet import Fernet
+import uuid  # For generating unique filenames
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -1156,37 +1157,31 @@ def get_db_connection():
     
 @app.route('/user_login', methods=['GET', 'POST'])
 def user_login():
-    if 'user_id' in session:  # If user is already logged in, redirect to home
+    if 'user_id' in session:  
         return redirect(url_for('user_home'))
-    
+
     if request.method == 'POST':
-        # Access form data
         email = request.form.get('email')
         password = request.form.get('password')
 
-        if not email or not password:
-            flash('Email and password are required!', 'error')
-            return redirect(url_for('user_login'))
-
-        # Debugging: Print form data
-        print(f"Email: {email}, Password: {password}")
-
-        # Check credentials in the database
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE email = ? AND password = ?', (email, password))
+        cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
         user = cursor.fetchone()
         conn.close()
 
         if user:
-            # Store user data in session
-            session['user_id'] = user['id']
-            session['email'] = user['email']
-            session['fullname'] = user['fullname']
-            return redirect(url_for('user_home'))  # Redirect to user home page
+            # Check hashed password
+            if check_password_hash(user['password'], password):  
+                session['user_id'] = user['id']
+                session['email'] = user['email']
+                session['fullname'] = user['fullname']
+                session.permanent = True  # Keep session alive
+                return redirect(url_for('user_home'))
+            else:
+                flash('Incorrect password!', 'error')
         else:
-            flash('Invalid email or password!', 'error')
-            return redirect(url_for('user_login'))
+            flash('User not found!', 'error')
 
     return render_template('user_login.html')
 
@@ -1197,50 +1192,74 @@ def user_home():
         flash('Please login to access this page!', 'error')
         return redirect(url_for('user_login'))
 
-    # Fetch user details from the session
-    user_id = session['user_id']
-    email = session['email']
-    fullname = session['fullname']
+    # Safely get session values (to avoid KeyError)
+    user_id = session.get('user_id')
+    email = session.get('email', '')  # Default to empty string if not found
+    fullname = session.get('fullname', '')
 
     return render_template('user_home.html', fullname=fullname, email=email)
+
 
 
 @app.route('/user_signup', methods=['GET', 'POST'])
 def user_signup():
     if request.method == 'POST':
-        # Get form data
-        fullname = request.form['fullname']
-        email = request.form['email']
-        phone = request.form['phone']
-        password = request.form['password']
-        aadhar = request.form['aadhar']
-        state = request.form['state']
-        district = request.form['district']
-        police_station = request.form['police_station']
+        # ✅ Get form data
+        fullname = request.form.get('fullname')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        password = request.form.get('password')
+        aadhar = request.form.get('aadhar')
+        state = request.form.get('state')
+        district = request.form.get('district')
+        police_station = request.form.get('police_station')
 
-        # Handle file upload
-        aadhar_card = request.files['aadhar_card']
+        # ✅ Validate email format
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, email):
+            flash('Invalid email format!', 'error')
+            return redirect(url_for('user_signup'))
+
+        # ✅ Validate phone number
+        if not re.match(r'^\d{10}$', phone):
+            flash('Phone number must be 10 digits!', 'error')
+            return redirect(url_for('user_signup'))
+
+        # ✅ Validate password strength
+        password_pattern = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%?&])[A-Za-z\d@$!%?&]{8,}$'
+        if not re.match(password_pattern, password):
+            flash('Password must be at least 8 characters long with uppercase, lowercase, number, and special character.', 'error')
+            return redirect(url_for('user_signup'))
+
+        # ✅ Hash Password before storing in DB
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+
+        # ✅ Handle file upload safely
+        aadhar_card = request.files.get('aadhar_card')
         aadhar_card_filename = None
-        if aadhar_card:
-            aadhar_card_filename = os.path.join(app.config['UPLOAD_FOLDER'], aadhar_card.filename)
+        if aadhar_card and aadhar_card.filename:
+            ext = os.path.splitext(aadhar_card.filename)[1]  # Get file extension
+            unique_filename = str(uuid.uuid4()) + ext  # Generate unique filename
+            aadhar_card_filename = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
             aadhar_card.save(aadhar_card_filename)
 
-        # Insert data into the database
+        # ✅ Insert data into the database
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO users (fullname, email, phone, password, aadhar, state, district, police_station, aadhar_card_filename)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (fullname, email, phone, password, aadhar, state, district, police_station, aadhar_card_filename))
+            ''', (fullname, email, phone, hashed_password, aadhar, state, district, police_station, aadhar_card_filename))
             conn.commit()
             flash('Signup successful! Please login.', 'success')
+            return redirect(url_for('user_login'))
+
         except sqlite3.IntegrityError:
             flash('Email, phone, or Aadhar number already exists!', 'error')
+
         finally:
             conn.close()
-
-        return redirect(url_for('user_signup'))
 
     return render_template('user_signup.html')
 
@@ -1320,11 +1339,15 @@ def user_case_status():
 
     conn = sqlite3.connect("cases.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT case_number FROM cases WHERE reported_person = ?", (user_name,))
+
+    # Fetch both case number and case status
+    cursor.execute("SELECT case_number, case_status FROM cases WHERE reported_person = ?", (user_name,))
     user_cases = cursor.fetchall()
+    
     conn.close()
 
     return render_template("user_case_status.html", cases=user_cases)
+
 
 @app.route('/user_help')
 def user_help():
