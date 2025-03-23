@@ -452,34 +452,40 @@ def police_signup():
         state = request.form['state']
         district = request.form['district']
         position = request.form['position']
-        
-        # Check password match
+
+        # ✅ Check if Police ID is unique
+        if not is_police_id_unique(police_id):
+            flash("Error: Police ID already exists.", "danger")
+            return redirect(url_for('police_signup'))
+
+        # ✅ Validate password match
         if password != confirm_password:
             flash("Passwords do not match. Please try again.", "danger")
             return redirect(url_for('police_signup'))
 
-        # Validate Police ID
+        # ✅ Validate Police ID format
         if not police_id.startswith("P") or not police_id[1:].isdigit():
             flash("Invalid Police ID. It must start with 'P' followed by numbers.", "danger")
             return redirect(url_for('police_signup'))
 
-        # Hash Password
+        # ✅ Hash password
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
 
-        # Handle Aadhar Card Upload
+        # ✅ Handle Aadhar Card Upload
         if 'aadhar_card' not in request.files:
             flash("Please upload your Aadhar card.", "danger")
             return redirect(url_for('police_signup'))
-        
+
         aadhar_card = request.files['aadhar_card']
         if aadhar_card.filename == '' or not allowed_file(aadhar_card.filename):
             flash("Invalid file format. Please upload a PNG, JPG, JPEG, or PDF.", "danger")
             return redirect(url_for('police_signup'))
-        
+
         filename = secure_filename(aadhar_card.filename)
         aadhar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         aadhar_card.save(aadhar_path)
 
+        # ✅ Insert data into database
         try:
             with sqlite3.connect('police.db') as conn:
                 cursor = conn.cursor()
@@ -493,7 +499,7 @@ def police_signup():
             return redirect(url_for('police_login'))
 
         except sqlite3.IntegrityError:
-            flash("Error: Police ID, Email, or Phone already exists.", "danger")
+            flash("Error: Email or Phone already exists.", "danger")
             return redirect(url_for('police_signup'))
 
     return render_template('police_signup.html')
@@ -1470,8 +1476,8 @@ def is_police_id_unique(police_id):
     with sqlite3.connect('police.db') as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) FROM police_officer WHERE police_id = ?", (police_id,))
-        count = cursor.fetchone()[0]
-        return count == 0  # Returns True if Police ID is unique
+        return cursor.fetchone()[0] == 0  # True if unique
+
 
 # API Route to check Police ID uniqueness
 @app.route('/check_police_id', methods=['POST'])
