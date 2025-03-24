@@ -1,4 +1,5 @@
 import datetime
+import time
 from flask import Flask, make_response, render_template, request, redirect, url_for, flash, session , jsonify 
 import sqlite3
 import os
@@ -413,6 +414,20 @@ def assign_specific_officer(case_number):
 
 @app.route('/police', methods=['GET', 'POST'])
 def police_login():
+    # Check if police is locked out
+    if 'police_lockout_time' in session:
+        elapsed_time = time.time() - session['police_lockout_time']
+        if elapsed_time < 1800:  # 30 minutes = 1800 seconds
+            session['login_blocked'] = "Too many failed attempts. Police login blocked for 30 minutes."
+            return redirect(url_for('welcome'))  # Redirect with alert message
+        else:
+            session.pop('police_lockout_time', None)  # Reset lockout after 30 minutes
+            session['police_login_attempts'] = 0  # Reset attempts
+
+    # Initialize login attempt counter
+    if 'police_login_attempts' not in session:
+        session['police_login_attempts'] = 0
+
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
@@ -428,12 +443,21 @@ def police_login():
             if check_password_hash(hashed_password, password):
                 session['user_id'] = user_id
                 session['user_name'] = user_name
-                flash("Login successful!", "success")
+                session.pop('police_login_attempts', None)  # Reset failed attempts
+                session.pop('police_lockout_time', None)  # Remove lockout
                 return redirect(url_for('police_home'))  
             else:
-                flash("Incorrect password. Please try again.", "danger")
+                session['police_login_attempts'] += 1
         else:
-            flash("No account found with this email.", "danger")
+            session['police_login_attempts'] += 1
+
+        # If attempts exceed 3, block for 30 minutes
+        if session['police_login_attempts'] >= 3:
+            session['police_lockout_time'] = time.time()
+            session['login_blocked'] = "Too many failed attempts. Police login blocked for 30 minutes."
+            return redirect(url_for('welcome'))
+
+        flash("Incorrect credentials. Please try again.", "danger")
 
     return render_template('police_login.html')
 
@@ -857,19 +881,42 @@ def check_admin(email, password):
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
+    # **Check if admin is locked out**
+    if 'admin_lockout_time' in session:
+        elapsed_time = time.time() - session['admin_lockout_time']
+        if elapsed_time < 1800:  # 30 minutes = 1800 seconds
+            session['login_blocked'] = "Too many failed attempts. Admin login blocked for 30 minutes."
+            return redirect(url_for('welcome'))  # Redirect to welcome page with alert
+        else:
+            session.pop('admin_lockout_time', None)  # Reset lockout after 30 minutes
+            session['admin_login_attempts'] = 0  # Reset attempts
+
+    # **Initialize login attempt counter**
+    if 'admin_login_attempts' not in session:
+        session['admin_login_attempts'] = 0
+
     if request.method == 'POST':
         email = request.form['username']  # Assuming 'username' is actually 'email'
         password = request.form['password']
-        
+
         admin = check_admin(email, password)  # Function to verify admin credentials
-        
+
         if admin:
             session['admin_id'] = admin[0]  # Store admin ID
             session['admin_name'] = admin[1]  # Store admin Name
+            session.pop('admin_login_attempts', None)  # Reset failed attempts
+            session.pop('admin_lockout_time', None)  # Remove lockout
             return redirect(url_for('admin_home'))  # Redirect to Admin Dashboard
         else:
-            flash("Invalid email or password.", "danger")
-            return redirect(url_for('admin_login'))  # Show flash message only on failure
+            session['admin_login_attempts'] += 1
+
+        # **If attempts exceed 3, block for 30 minutes**
+        if session['admin_login_attempts'] >= 3:
+            session['admin_lockout_time'] = time.time()
+            session['login_blocked'] = "Too many failed attempts. Admin login blocked for 30 minutes."
+            return redirect(url_for('welcome'))  # Redirect to welcome page with alert
+
+        flash("Invalid email or password.", "danger")
 
     return render_template('admin_login.html')
 
@@ -1160,6 +1207,20 @@ def user_login():
     if 'user_id' in session:  
         return redirect(url_for('user_home'))
 
+    # Initialize login attempt counter and lockout time
+    if 'login_attempts' not in session:
+        session['login_attempts'] = 0
+
+    # Check if the user is locked out
+    if 'lockout_time' in session:
+        elapsed_time = time.time() - session['lockout_time']
+        if elapsed_time < 1800:  # 30 minutes = 1800 seconds
+            remaining_time = int((1800 - elapsed_time) / 60)  # Convert to minutes
+            return redirect(url_for('welcome'))
+        else:
+            session.pop('lockout_time', None)  # Reset lockout after 30 minutes
+            session['login_attempts'] = 0  # Reset login attempts
+
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
@@ -1176,12 +1237,23 @@ def user_login():
                 session['user_id'] = user['id']
                 session['email'] = user['email']
                 session['fullname'] = user['fullname']
-                session.permanent = True  # Keep session alive
+                session.permanent = True  
+                session.pop('login_attempts', None)  # Reset failed attempts
+                session.pop('lockout_time', None)  # Remove lockout if previously set
                 return redirect(url_for('user_home'))
             else:
+                session['login_attempts'] += 1
                 flash('Incorrect password!', 'error')
         else:
+            session['login_attempts'] += 1
             flash('User not found!', 'error')
+
+        # Check if attempts exceeded
+        if session['login_attempts'] >= 3:
+            session['lockout_time'] = time.time()  # Store current time for lockout
+            session.pop('login_attempts', None)  # Reset attempts after lockout
+            flash("Too many failed attempts. Try again after 30 minutes.", "error")
+            return redirect(url_for('welcome'))  # Redirect to welcome page
 
     return render_template('user_login.html')
 
@@ -1204,7 +1276,6 @@ def user_home():
 @app.route('/user_signup', methods=['GET', 'POST'])
 def user_signup():
     if request.method == 'POST':
-        # ✅ Get form data
         fullname = request.form.get('fullname')
         email = request.form.get('email')
         phone = request.form.get('phone')
@@ -1214,36 +1285,31 @@ def user_signup():
         district = request.form.get('district')
         police_station = request.form.get('police_station')
 
-        # ✅ Validate email format
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(email_pattern, email):
             flash('Invalid email format!', 'error')
             return redirect(url_for('user_signup'))
 
-        # ✅ Validate phone number
         if not re.match(r'^\d{10}$', phone):
             flash('Phone number must be 10 digits!', 'error')
             return redirect(url_for('user_signup'))
 
-        # ✅ Validate password strength
         password_pattern = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%?&])[A-Za-z\d@$!%?&]{8,}$'
         if not re.match(password_pattern, password):
             flash('Password must be at least 8 characters long with uppercase, lowercase, number, and special character.', 'error')
             return redirect(url_for('user_signup'))
 
-        # ✅ Hash Password before storing in DB
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
 
-        # ✅ Handle file upload safely
         aadhar_card = request.files.get('aadhar_card')
         aadhar_card_filename = None
         if aadhar_card and aadhar_card.filename:
             ext = os.path.splitext(aadhar_card.filename)[1]  # Get file extension
             unique_filename = str(uuid.uuid4()) + ext  # Generate unique filename
-            aadhar_card_filename = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            aadhar_card_filename = os.path.join(app.config['UPLOAD_FOLDER'], 
+                                                unique_filename)
             aadhar_card.save(aadhar_card_filename)
 
-        # ✅ Insert data into the database
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -1291,7 +1357,8 @@ def send_alert():
         cursor = conn.cursor()
 
         # Get user details
-        cursor.execute("SELECT fullname, phone FROM users WHERE id = ?", (session['user_id'],))
+        cursor.execute("SELECT fullname, phone FROM users WHERE id = ?", 
+                       (session['user_id'],))
         user = cursor.fetchone()
 
         if not user:
@@ -1315,8 +1382,10 @@ def send_alert():
         ''')
 
         # ✅ Save the alert to user_alert table with status as "Active"
-        cursor.execute("INSERT INTO user_alert (user_id, name, phone, location, district, status) VALUES (?, ?, ?, ?, ?, 'Active')",
-                       (session['user_id'], user_name, user_phone, location, district))
+        cursor.execute("INSERT INTO user_alert (user_id, name, phone, location, "
+        "district, status) VALUES (?, ?, ?, ?, ?, 'Active')",
+                       (session['user_id'], user_name, user_phone, location, 
+                        district))
 
         conn.commit()
         return jsonify({"message": "Alert saved successfully!"})
