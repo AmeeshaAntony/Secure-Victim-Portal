@@ -724,14 +724,25 @@ def update_case_status():
     case_number = request.form.get('case_number')
     new_status = request.form.get('new_status')
 
-    conn = sqlite3.connect('cases.db')
-    cursor = conn.cursor()
-    cursor.execute("UPDATE cases SET status = ? WHERE case_number = ?", (new_status, case_number))
-    conn.commit()
-    conn.close()
+    print(f"Received update request for case {case_number} with status {new_status}")  # Debugging
 
-    return jsonify({'success': True})
+    if not case_number or not new_status:
+        return jsonify({"success": False, "error": "Missing case number or status"})
 
+    try:
+        with sqlite3.connect("cases.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE cases SET case_status = ? WHERE case_number = ?", (new_status, case_number))
+            conn.commit()
+        
+        print("Database updated successfully!")  # Debugging
+        return jsonify({"success": True})  
+
+    except Exception as e:
+        print("Error updating case status:", str(e))  # Debugging
+        return jsonify({"success": False, "error": str(e)})
+
+    
 @app.route('/delete_case', methods=['POST'])
 def delete_case():
     try:

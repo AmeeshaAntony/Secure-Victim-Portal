@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Case Details</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='detail_case.css') }}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Include jQuery -->
 </head>
 <body>
     <h2>Case Status</h2>
@@ -46,30 +46,40 @@
 
     <script>
         $(document).ready(function() {
-            // Update Case Status
-            $(".update-status").on("change", function() {
-                var caseNumber = $(this).data("case-number");
-                var newStatus = $(this).val();
-                var statusElement = $(this).closest("tr").find(".status-text");
-    
+            console.log("JavaScript is loaded!"); // Debugging
+        
+            $(".confirm-update").on("click", function() {
+                console.log("Update button clicked!"); // Check if the button click is detected
+        
+                var caseNumber = $(this).attr("data-case-number");
+                var newStatus = $(this).siblings(".update-status").val();
+                var statusElement = $(this).siblings(".status-text");
+        
+                console.log("Case Number:", caseNumber, "New Status:", newStatus); // Debugging
+        
                 $.ajax({
                     url: "/update_case_status",
                     type: "POST",
+                    contentType: "application/x-www-form-urlencoded",
                     data: { case_number: caseNumber, new_status: newStatus },
                     success: function(response) {
+                        console.log("Response received:", response); // Check response from Flask
                         if (response.success) {
-                            statusElement.text(newStatus);
+                            statusElement.text(newStatus); // Update displayed text
                             alert("Case status updated successfully!");
                         } else {
                             alert("Error updating case status!");
                         }
                     },
                     error: function(xhr, status, error) {
-                        console.error("Error updating case status:", error);
+                        console.error("Error:", error);
+                        alert("Failed to update case status.");
                     }
                 });
             });
-    
+        });
+        
+        
             // Delete Case with Confirmation
             $(".delete-case").on("click", function() {
                 var caseNumber = $(this).data("case-number");
