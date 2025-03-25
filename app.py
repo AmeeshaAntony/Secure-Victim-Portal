@@ -1364,12 +1364,10 @@ def send_alert():
         return jsonify({"message": "Location and district are required"}), 400
 
     try:
-        conn = sqlite3.connect("user.db")
+        conn = sqlite3.connect(os.path.join(os.getcwd(), "user.db"))
         cursor = conn.cursor()
 
-        # Get user details
-        cursor.execute("SELECT fullname, phone FROM users WHERE id = ?", 
-                       (session['user_id'],))
+        cursor.execute("SELECT fullname, phone FROM users WHERE id = ?", (session['user_id'],))
         user = cursor.fetchone()
 
         if not user:
@@ -1377,7 +1375,6 @@ def send_alert():
 
         user_name, user_phone = user
 
-        # ✅ Create user_alert table if it doesn't exist
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS user_alert (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1386,28 +1383,26 @@ def send_alert():
                 phone TEXT NOT NULL,
                 location TEXT NOT NULL,
                 district TEXT NOT NULL,
-                status TEXT DEFAULT 'Active',  -- Added Status Column
+                status TEXT DEFAULT 'Active',
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         ''')
 
-        # ✅ Save the alert to user_alert table with status as "Active"
-        cursor.execute("INSERT INTO user_alert (user_id, name, phone, location, "
-        "district, status) VALUES (?, ?, ?, ?, ?, 'Active')",
-                       (session['user_id'], user_name, user_phone, location, 
-                        district))
+        cursor.execute("INSERT INTO user_alert (user_id, name, phone, location, district, status) VALUES (?, ?, ?, ?, ?, 'Active')",
+                       (session['user_id'], user_name, user_phone, location, district))
 
         conn.commit()
+        print("Alert saved successfully!")
+
         return jsonify({"message": "Alert saved successfully!"})
 
     except Exception as e:
-        print("Error:", e)
+        print("SQL Error:", str(e))  # Debugging step
         return jsonify({"message": "Internal server error"}), 500
 
     finally:
-        conn.close()  # Ensuring the connection is closed properly
-
+        conn.close()
     
 @app.route('/user_case_status')
 def user_case_status():
