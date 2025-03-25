@@ -14,9 +14,10 @@
         <p><strong>Phone:</strong> {{ user[1] }}</p>
         <p><strong>Email:</strong> {{ user[2] }}</p>
         <p><strong>Position:</strong> {{ user[3] }}</p>
+        <p><strong>Station:</strong> {{ user[6] }}</p>  <!-- ✅ Added station here -->
         <p><strong>State:</strong> {{ user[4] }}</p>
         <p><strong>District:</strong> {{ user[5] }}</p>
-        
+
         <div class="button-container">
             <a href="/edit_profile" class="edit-button">Edit Profile</a>
             <button class="logout-button" onclick="window.location.href='/police/logout'">Logout</button>
