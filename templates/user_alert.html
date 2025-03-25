@@ -177,10 +177,15 @@
         
                                 let address = data.address || {};
                                 let fullLocation = data.display_name || "Location Unavailable";
-        
                                 document.getElementById("location").value = fullLocation;
         
-                                let district = address.state_district || address.county || address.city || address.state || "District Not Found";
+                                let district =
+                                    address.state_district ||
+                                    address.county ||
+                                    address.city ||
+                                    address.village ||
+                                    address.state ||
+                                    "District Not Found";
         
                                 console.log("🏢 Detected District:", district);
                                 populateDistrict(district);
@@ -196,14 +201,13 @@
                         document.getElementById("location").value = "Location Permission Denied";
                         populateDistrict("District Permission Denied");
                     },
-                    { timeout: 10000, enableHighAccuracy: true } // Increase timeout, improve accuracy
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 } // 🔥 More accuracy
                 );
             } else {
                 document.getElementById("location").value = "Geolocation Not Supported";
                 populateDistrict("Geolocation Not Supported");
             }
-        }
-        
+        }        
         
 
         function populateDistrict(selectedDistrict) {
