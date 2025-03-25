@@ -18,7 +18,25 @@ app = Flask(__name__)
 bcrypt = Bcrypt(app)
 app.secret_key = "your_secret_key"  # Required for flash messages
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/users.db'
-SECRET_KEY = "crime"  # Set the correct decryption key
+def get_secret_key():
+    """Fetch SECRET_KEY from admin.db (security_settings table)."""
+    try:
+        with sqlite3.connect('admin.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT secret_key FROM security_settings ORDER BY id DESC LIMIT 1")
+            result = cursor.fetchone()
+            if result:
+                return result[0]  # Return the secret key from the database
+            else:
+                return "default_secret"  # Fallback if no key is found
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return "default_secret"  # Fallback in case of an error
+
+# ✅ Set Flask SECRET_KEY dynamically
+app.config['SECRET_KEY'] = get_secret_key()
+  # Set the correct decryption key
+SECRET_KEY = get_secret_key()
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
 encryption_key = Fernet.generate_key()
 cipher = Fernet(encryption_key)
@@ -667,6 +685,7 @@ def decrypt_photo(case_number):
     if request.method == 'POST':
         entered_key = request.form.get('secret_key')
 
+    
         if entered_key == SECRET_KEY:
             # ✅ Automatically log that the officer decrypted the photo
             log_case_action(officer_id, case_number, "Decrypted Photo")
