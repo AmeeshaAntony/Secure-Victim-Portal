@@ -50,3 +50,27 @@ header {
     background-color: blue !important;
     color: white;
 }
+.home-button {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    padding: 12px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    background: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 0 10px #007bff;
+    text-decoration: none;
+}
+
+.home-button:hover {
+    background: #0056b3;
+    box-shadow: 0 0 20px #007bff;
+}
