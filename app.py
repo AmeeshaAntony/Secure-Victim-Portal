@@ -978,22 +978,18 @@ def admin_signup():
 
         # Judicial ID must start with 'J' and end with a digit
         if not re.match(r'^J.*\d$', judicial_id):
-            flash("Judicial ID must start with 'J' and end with a digit", "error")
             return redirect(url_for('admin_signup'))
 
         # Password must have an uppercase, lowercase, digit, special character, and at least 8 characters
-        if not re.match(r'^(?=.[A-Z])(?=.[a-z])(?=.\d)(?=.[@$!%?&])[A-Za-z\d@$!%?&]{8,}$', password):
-            flash("Password must contain uppercase, lowercase, number, special character, and be at least 8 characters long", "error")
+        if not re.match(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%?&])[A-Za-z\d@$!%*?&]{8,}$', password):
             return redirect(url_for('admin_signup'))
 
         # Check if passwords match
         if password != confirm_password:
-            flash("Passwords do not match", "error")
             return redirect(url_for('admin_signup'))
 
         # ✅ *Handle Image Upload*
         if 'id_card_photo' not in request.files or id_card_photo.filename == '':
-            flash("Please upload an ID card photo", "error")
             return redirect(url_for('admin_signup'))
 
         filename = secure_filename(id_card_photo.filename)
@@ -1007,7 +1003,7 @@ def admin_signup():
                 cursor.execute("SELECT id FROM admin WHERE email = ? OR judicial_id = ?", (email, judicial_id))
                 existing_admin = cursor.fetchone()
                 if existing_admin:
-                    flash("Email or Judicial ID already exists!", "error")
+
                     return redirect(url_for('admin_signup'))
 
                 # ✅ *Store Data in Database*
@@ -1018,10 +1014,11 @@ def admin_signup():
                 ''', (full_name, position, phone, email, state, district, judicial_id, id_card_path, hashed_password))
                 conn.commit()
 
-                flash("Admin registered successfully! Please log in.", "success")
+
                 return redirect(url_for('admin_login'))
 
         except sqlite3.Error as e:
+            print("SQLite error:", e)  # Debugging
             flash("Database error: " + str(e), "error")
             return redirect(url_for('admin_signup'))
 
