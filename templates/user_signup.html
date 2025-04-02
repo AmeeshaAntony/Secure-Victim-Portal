@@ -10,6 +10,7 @@
     <div class="container">
         <div class="signup-box">
             <h2>User Signup</h2>
+
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -22,6 +23,7 @@
             {% endwith %}
 
             <form id="signupForm" action="/user_signup" method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
+                
                 <!-- Full Name -->
                 <div class="input-group">
                     <label for="fullname">Full Name:</label>
@@ -69,11 +71,8 @@
                 <!-- State Dropdown -->
                 <div class="input-group">
                     <label for="state">State:</label>
-                    <select id="state" name="state" required>
+                    <select id="state" name="state" onchange="loadDistricts()" required>
                         <option value="">Select State</option>
-                        <option value="State1">State 1</option>
-                        <option value="State2">State 2</option>
-                        <!-- Add more states as needed -->
                     </select>
                 </div>
 
@@ -82,9 +81,6 @@
                     <label for="district">District:</label>
                     <select id="district" name="district" required>
                         <option value="">Select District</option>
-                        <option value="District1">District 1</option>
-                        <option value="District2">District 2</option>
-                        <!-- Add more districts as needed -->
                     </select>
                 </div>
 
@@ -102,30 +98,46 @@
     </div>
 
     <script>
-        function validateForm() {
-            // Password and Confirm Password Validation
-            const password = document.getElementById("password").value;
-            const confirmPassword = document.getElementById("confirm_password").value;
-            if (password !== confirmPassword) {
-                alert("Passwords do not match!");
-                return false;
-            }
+        const districts = {
+            "Andhra Pradesh": ["Anantapur", "Chittoor", "East Godavari", "Guntur", "Krishna", "Kurnool", "Nellore", "Prakasam", "Srikakulam", "Visakhapatnam", "Vizianagaram", "West Godavari", "YSR Kadapa"],
+            "Arunachal Pradesh": ["Anjaw", "Changlang", "Dibang Valley", "East Kameng", "East Siang", "Kamle", "Kurung Kumey", "Lepa Rada", "Lohit", "Longding", "Lower Dibang Valley", "Lower Siang", "Lower Subansiri", "Namsai", "Papum Pare", "Shi-Yomi", "Siang", "Tawang", "Tirap", "Upper Siang", "Upper Subansiri", "West Kameng", "West Siang"],
+            "Assam": ["Baksa", "Barpeta", "Biswanath", "Bongaigaon", "Cachar", "Charaideo", "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Goalpara", "Golaghat", "Hailakandi", "Hojai", "Jorhat", "Kamrup", "Kamrup Metropolitan", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur", "Majuli", "Morigaon", "Nagaon", "Nalbari", "Sivasagar", "Sonitpur", "South Salmara-Mankachar", "Tinsukia", "Udalguri", "West Karbi Anglong"],
+            "Bihar": ["Araria", "Arwal", "Aurangabad", "Banka", "Begusarai", "Bhagalpur", "Bhojpur", "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad", "Kaimur", "Katihar", "Khagaria", "Kishanganj", "Lakhisarai", "Madhepura", "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia", "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi", "Siwan", "Supaul", "Vaishali", "West Champaran"],
+            "Delhi": ["Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi", "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi"],
+            "Goa": ["North Goa", "South Goa"],
+            "Gujarat": ["Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch", "Bhavnagar", "Botad", "Chhota Udaipur", "Dahod", "Dang", "Devbhoomi Dwarka", "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch", "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal", "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar", "Tapi", "Vadodara", "Valsad"],
+            "Haryana": ["Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurgaon", "Hisar", "Jhajjar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Mahendragarh", "Nuh", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa", "Sonipat", "Yamunanagar"],
+            "Himachal Pradesh": ["Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu", "Lahaul and Spiti", "Mandi", "Shimla", "Sirmaur", "Solan", "Una"],
+            "Jammu and Kashmir": ["Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch", "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur"],
+            "Jharkhand": ["Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum", "Garhwa", "Giridih", "Godda", "Gumla", "Hazaribagh", "Jamtara", "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu", "Ramgarh", "Ranchi", "Sahebganj", "Seraikela-Kharsawan", "Simdega", "West Singhbhum"],
+            "Karnataka": ["Bagalkot", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar", "Chamarajanagar", "Chikballapur", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada", "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", "Kalaburagi", "Kodagu", "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi", "Uttara Kannada", "Vijayapura", "Yadgir"],
+            "Kerala": ["Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam", "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad"],
+            "Ladakh": ["Kargil", "Leh"],
+            "Lakshadweep": ["Lakshadweep"],
+        };
 
-            // Aadhar Number Validation
-            const aadhar = document.getElementById("aadhar").value;
-            if (aadhar.length !== 12 || isNaN(aadhar)) {
-                alert("Aadhar number must be exactly 12 digits!");
-                return false;
+        window.onload = function () {
+            let stateDropdown = document.getElementById("state");
+            for (let state in districts) {
+                let option = document.createElement("option");
+                option.value = state;
+                option.textContent = state;
+                stateDropdown.appendChild(option);
             }
+        };
 
-            // Phone Number Validation
-            const phone = document.getElementById("phone").value;
-            if (phone.length !== 10 || isNaN(phone)) {
-                alert("Phone number must be exactly 10 digits!");
-                return false;
+        function loadDistricts() {
+            let state = document.getElementById("state").value;
+            let districtDropdown = document.getElementById("district");
+            districtDropdown.innerHTML = '<option value="">Select District</option>';
+            if (state && districts[state]) {
+                districts[state].forEach(district => {
+                    let option = document.createElement("option");
+                    option.value = district;
+                    option.textContent = district;
+                    districtDropdown.appendChild(option);
+                });
             }
-
-            return true; // Form will submit if all validations pass
         }
     </script>
 </body>
