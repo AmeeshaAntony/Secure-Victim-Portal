@@ -625,18 +625,18 @@ def case_list():
 
     return render_template('case_details_view.html', cases=cases)
 
-@app.route('/case_details')
-def case_details():
+@app.route('/case_details/<case_number>')
+def case_details(case_number):  # Accept case_number as a string
     officer_id = session.get('officer_id')  # Ensure officer is logged in
 
-    # Fetch the latest case (or modify logic to select a specific case)
+    # Fetch the specific case from the database
     with sqlite3.connect('cases.db') as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM cases ORDER BY case_number DESC LIMIT 1")  
+        cursor.execute("SELECT * FROM cases WHERE case_number = ?", (case_number,))
         case = cursor.fetchone()
 
     if not case:
-        flash("No cases found!", "danger")
+        flash("Case not found!", "danger")
         return redirect(url_for('manage_cases'))  # Redirect back to manage cases
 
     # ✅ Log case access
